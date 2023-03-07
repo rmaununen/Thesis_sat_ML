@@ -12,7 +12,7 @@ print('TensorFlow ' + tf.__version__)
 print('Keras ' + tf.keras.__version__)
 
 # Settings
-nsamples = 7000     # Number of samples to use as a dataset
+nsamples = 5000     # Number of samples to use as a dataset
 val_ratio = 0.2     # Fraction of samples that should be held for validation set
 test_ratio = 0.2    # Fraction of samples that should be held for test set
 tflite_model_name = 'point_model'  # Will be given .tflite suffix
@@ -67,7 +67,7 @@ model.compile(optimizer='rmsprop', loss='mae', metrics=['mae'])
 # Train model
 history = model.fit(x_train,
                     y_train,
-                    epochs=1500,
+                    epochs=1200,
                     batch_size=100,
                     validation_data=(x_val, y_val))
 # Plot the training history
@@ -94,9 +94,15 @@ plt.plot(x_test, predictions, 'r.', label='Prediction')
 plt.legend()
 plt.show()
 
+#SAVE MODEL
+model.save(tflite_model_name+'.h5')
+
 # Convert Keras model to a tflite model
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
 converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+converter.inference_input_type = tf.int8  # or tf.uint8
+converter.inference_output_type = tf.int8  # or tf.uint8
 tflite_model = converter.convert()
 
 open(tflite_model_name + '.tflite', 'wb').write(tflite_model)
