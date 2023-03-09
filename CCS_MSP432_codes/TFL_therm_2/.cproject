@@ -48,7 +48,7 @@
 									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/third_party/gemmlowp}"/>
 									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/third_party/flatbuffers/include}"/>
 									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/third_party/ruy}"/>
-									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/hello_world}"/>
+									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/THERM_2}"/>
 									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/third_party/cmsis}"/>
 									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/third_party/cmsis/CMSIS/Core/Include}"/>
 									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/third_party/cmsis/CMSIS/DSP/Include}"/>

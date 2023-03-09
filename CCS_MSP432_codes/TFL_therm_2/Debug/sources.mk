@@ -124,7 +124,7 @@ GEN_OPTS__QUOTED :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
-hello_world \
+THERM_2 \
 tensorflow/lite/c \
 tensorflow/lite/core/api \
 tensorflow/lite/experimental/microfrontend/lib \
