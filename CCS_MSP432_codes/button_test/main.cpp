@@ -2,8 +2,6 @@
 #include <driverlib.h>
 #include "Console.h"
 
-//TEST CHANGES
-
 #define red BIT0
 #define green BIT1
 #define blue BIT2
