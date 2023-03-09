@@ -1,9 +1,13 @@
+import sys
+sys.path.append('/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes')
 import tensorflow as tf
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-from tfl_converter_tools import *
-
+from other_codes.tfl_converter_tools import *
+import os
+os.chdir('/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/Double_sine_model')
+print(os.getcwd())
 nsamples = 200     # Number of samples to use as a dataset
 np.random.seed(1234)
 x_values = np.random.uniform(low=0, high=(2 * math.pi), size=nsamples).astype(np.float32)
