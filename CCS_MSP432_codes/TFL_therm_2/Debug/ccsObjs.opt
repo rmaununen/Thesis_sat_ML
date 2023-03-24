@@ -5,6 +5,7 @@
 "./THERM_2/main_functions.o"
 "./THERM_2/main_nortos.o"
 "./THERM_2/output_handler.o"
+"./THERM_2/therm_model_1_data.o"
 "./THERM_2/therm_model_data.o"
 "./tensorflow/lite/c/common.o"
 "./tensorflow/lite/core/api/error_reporter.o"

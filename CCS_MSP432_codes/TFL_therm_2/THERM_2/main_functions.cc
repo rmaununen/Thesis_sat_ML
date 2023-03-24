@@ -14,10 +14,10 @@ limitations under the License.
 ==============================================================================*/
 
 #include "main_functions.h"
-
 #include "tensorflow/lite/micro/all_ops_resolver.h"
 #include "constants.h"
-#include "therm_model_data.h"
+//#include "therm_model_data.h"
+#include "therm_model_1_data.h"
 #include "output_handler.h"
 #include "tensorflow/lite/micro/micro_error_reporter.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
@@ -55,7 +55,7 @@ void setup() {
 
   // Map the model into a usable data structure. This doesn't involve any
   // copying or parsing, it's a very lightweight operation.
-  model = tflite::GetModel(g_therm_model_data);
+  model = tflite::GetModel(g_therm_model_1_data);
   if (model->version() != TFLITE_SCHEMA_VERSION) {
     TF_LITE_REPORT_ERROR(error_reporter,
                          "Model provided is schema version %d not equal "
@@ -96,7 +96,7 @@ void loop() {
   // our position within the range of possible x values the model was
   // trained on, and use this to calculate a value.
   float position = static_cast<float>(inference_count) /
-                   static_cast<float>(kInferencesPerCycle);
+                   static_cast<float>(kInferencesPerCycle); //Changed kInferencesPerCycle from 20 to 50 24.03.23
   float x = position * kXrange;
 
   // Quantize the input from floating-point to integer
@@ -127,4 +127,5 @@ void loop() {
   // the total number per cycle
   inference_count += 1;
   if (inference_count >= kInferencesPerCycle) inference_count = 0;
+  //__delay_cycles(100000); //1 s delay introduced 24.03.23
 }
