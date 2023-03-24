@@ -63,3 +63,4 @@ def write_lists_to_txt(list1, list2, filename):
         for item1, item2 in zip(list1, list2):
             f.write(f'{item1}\t{item2}\n')
 write_lists_to_txt(x_values, y_values, 'mod1_data.txt')
+write_lists_to_txt(x, y3, 'mod1_actual.txt')

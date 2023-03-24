@@ -6,7 +6,19 @@ import matplotlib.pyplot as plt
 from tensorflow.keras import layers
 os.chdir('/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/Simple_therm_model_1')
 
+# Print versions
+print('Numpy ' + np.__version__)
+print('TensorFlow ' + tf.__version__)
+print('Keras ' + tf.keras.__version__)
+
+# Settings
 plot_ds = True
+nsamples = 5000     # Number of samples to use as a dataset
+val_ratio = 0.2     # Fraction of samples that should be held for validation set
+test_ratio = 0.2    # Fraction of samples that should be held for test set
+tflite_model_name = 'therm_model_1'  # Will be given .tflite suffix
+c_model_name = 'therm_model_1'       # Will be given .h suffi
+
 
 def read_lists_from_txt(filename):
     list1 = []
@@ -31,18 +43,6 @@ if plot_ds:
     plt.title('S/C Temp')
     plt.legend()
     plt.show()
-
-# Print versions
-print('Numpy ' + np.__version__)
-print('TensorFlow ' + tf.__version__)
-print('Keras ' + tf.keras.__version__)
-
-# Settings
-nsamples = 5000     # Number of samples to use as a dataset
-val_ratio = 0.2     # Fraction of samples that should be held for validation set
-test_ratio = 0.2    # Fraction of samples that should be held for test set
-tflite_model_name = 'therm_model_1'  # Will be given .tflite suffix
-c_model_name = 'therm_model_1'       # Will be given .h suffi
 
 # Split the dataset into training, validation, and test sets
 val_split = int(val_ratio * nsamples)
@@ -99,8 +99,8 @@ fig = plt.figure()
 ax = fig.add_subplot(111)
 plt.clf()
 plt.title("Comparison of predictions to actual values")
-plt.plot(x_test, y_test, 'b.', label='Actual')
-plt.plot(x_test, predictions, 'r.', label='Prediction')
+plt.plot(x_test, y_test, 'b.', label='Valdiation dataset')
+plt.plot(x_test, predictions, 'r.', label='Model output')
 plt.legend()
 plt.show()
 

@@ -71,3 +71,13 @@ def hex_to_c_array(hex_data, var_name):
   c_str += '#endif //' + var_name.upper() + '_H'
 
   return c_str
+
+def read_lists_from_txt(filename):
+  list1 = []
+  list2 = []
+  with open(filename, 'r') as f:
+    for line in f:
+      item1, item2 = line.strip().split('\t')
+      list1.append(float(item1))
+      list2.append(float(item2))
+  return list1, list2

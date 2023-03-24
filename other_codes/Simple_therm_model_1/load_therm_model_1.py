@@ -6,24 +6,27 @@ import math
 import matplotlib.pyplot as plt
 from other_codes.tfl_converter_tools import *
 import os
-os.chdir('/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/Double_sine_model')
+os.chdir('/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/Simple_therm_model_1')
 print(os.getcwd())
-nsamples = 200     # Number of samples to use as a dataset
-np.random.seed(1234)
-x_values = np.random.uniform(low=0, high=(2 * math.pi), size=nsamples).astype(np.float32)
-y_values = np.sin(x_values*2)# + (0.1 * np.random.randn(x_values.shape[0]))
 
-tflite_model_name = 'point_model'  # Will be given .tflite suffix
-c_model_name = 'point_model'       # Will be given .h suffix
+x_values, y_values = read_lists_from_txt('mod1_actual.txt')
+x_values = np.array(x_values)
+y_values = np.array(y_values)
+
+tflite_model_name = 'therm_model_1'  # Will be given .tflite suffix
+c_model_name = 'therm_model_1'       # Will be given .h suffix
 
 model = tf.keras.models.load_model(tflite_model_name+'.h5')
 
 predictions = model.predict(x_values)
 
 # Convert Keras model to a tflite model
+nsamples = 200     # Number of samples to use as a representative dataset
+np.random.seed(1234)
+x_val = np.random.uniform(low=0, high=(2 * math.pi), size=nsamples).astype(np.float32)
 def representative_dataset():
   for i in range(200):
-    yield([x_values[i].reshape(1, 1)])
+    yield([x_val[i].reshape(1, 1)])
 
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
 print('converter object was created')
