@@ -3,18 +3,18 @@ import matplotlib.pyplot as plt
 from random import randrange
 
 # Define variables
-n1 = randrange(90, 110)/100
-n2 = randrange(90, 110)/100
-n3 = randrange(90, 110)/100
-n4 = randrange(90, 110)/100
-n5 = randrange(90, 110)/100
-n6 = randrange(95, 105)/100
-n7 = randrange(95, 105)/100
-n8 = randrange(95, 105)/100
-n9 = randrange(95, 105)/100
-n10 = randrange(95, 105)/100
+n1 = 1 #randrange(90, 110)/100
+n2 = 1 #randrange(90, 110)/100
+n3 = 1 #randrange(90, 110)/100
+n4 = 1 #randrange(90, 110)/100
+n5 = 1 #randrange(90, 110)/100
+n6 = 1 #randrange(95, 105)/100
+n7 = 1 #randrange(95, 105)/100
+n8 = 1 #randrange(95, 105)/100
+n9 = 1 #randrange(95, 105)/100
+n10 = 1 #randrange(95, 105)/100
 
-c = randrange(680, 720)/100
+c = 7 #randrange(680, 720)/100
 
 # Define x values
 x = np.linspace(0, 2*np.pi, 1000)
