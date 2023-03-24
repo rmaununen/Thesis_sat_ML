@@ -35,7 +35,7 @@ if plot_ds:
     plt.plot(x_values, y_values, '.')
     plt.show()
 
-# Plit the dataset into training, validation, and test sets
+# Split the dataset into training, validation, and test sets
 val_split = int(val_ratio * nsamples)
 test_split = int(val_split + (test_ratio * nsamples))
 x_val, x_test, x_train = np.split(x_values, [val_split, test_split])
