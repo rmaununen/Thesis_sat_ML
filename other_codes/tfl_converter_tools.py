@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import random
 
 def predict_tflite(tflite_model, x_test):
   # Prepare the test data
@@ -81,3 +82,27 @@ def read_lists_from_txt(filename):
       list1.append(float(item1))
       list2.append(float(item2))
   return list1, list2
+
+def read_ptm_dataset(N):
+  x_rows = []
+  y_rows = []
+  with open("dataset_{}.txt".format(N), "r") as f:
+    for line in f:
+      # Split the line into values
+      values = line.strip().split()
+      if len(values) == N + 1:
+        # Extract the input and output values
+        x = [float(v) for v in values[:-1]]
+        y = [float(values[-1])]
+        x_rows.append(x)
+        y_rows.append(y)
+      else:
+        print('Warning: length of a row is not', N + 1, '. Counted is', len(values))
+    # Shuffle
+    # Combine x and y into a list of tuples
+    xy_pairs = list(zip(x_rows, y_rows))
+    # Shuffle the list of tuples
+    random.shuffle(xy_pairs)
+    # Separate the tuples back into two lists
+    x_rows, y_rows = zip(*xy_pairs)
+  return np.array(x_rows), np.array(y_rows)

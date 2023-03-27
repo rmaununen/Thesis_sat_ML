@@ -1,8 +1,8 @@
 import os
 
 # Define the filename of the input file
-input_file = "Black_chassis_raw.txt"
-short_id = 'bc'
+input_file = "SP-Y_raw.txt"
+short_id = '-Y'
 
 out_id = 1
 
