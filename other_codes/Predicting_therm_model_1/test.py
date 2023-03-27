@@ -9,24 +9,18 @@ print(np.shape(b))
 print(np.shape(d))
 
 
-def read_ptm_dataset(N):
-    x_rows = []
-    y_rows = []
-    with open("dataset_{}.txt".format(N), "r") as f:
-        for line in f:
-            # Split the line into values
-            values = line.strip().split()
-            if len(values) == N + 1:
-                # Extract the input and output values
-                x = [float(v) for v in values[:-1]]
-                y = [float(values[-1])]
-                x_rows.append(x)
-                y_rows.append(y)
-            else:
-                print('Warning: length of a row is not', N+1, '. Counted is', len(values))
+my_list = [1.0, 2.5, 3.2, 4.8, 5.1, 6.7, 7.2, 8.9, 9.0, 10.5]
 
-    return x_rows, y_rows
-x_rows, y_rows = read_ptm_dataset(30)
-print('x_rows', np.shape(x_rows), 'y rows:', np.shape(y_rows))
-print(x_rows[-1])
-print(y_rows[-1])
+# Starting index where the constant values should begin
+k = 3
+
+# Number of elements to make constant
+N = 4
+
+# Value to assign to the constant elements
+constant_value = my_list[k]
+
+# Update the list to make the elements constant
+my_list[k:k+N] = [constant_value] * N
+
+print(my_list)

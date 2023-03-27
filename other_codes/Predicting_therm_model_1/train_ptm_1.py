@@ -78,7 +78,7 @@ plt.show()
 
 x_test_rows = []
 y_test_rows = []
-with open("test_orbit_30.txt", "r") as f:
+with open("1test_0.txt", "r") as f:
     for line in f:
         # Split the line into values
         values = line.strip().split()
