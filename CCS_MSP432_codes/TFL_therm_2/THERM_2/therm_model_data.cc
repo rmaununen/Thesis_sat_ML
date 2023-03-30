@@ -1,4 +1,5 @@
 #include "therm_model_data.h"
+//DOUBLE SINE MODEL  (point_model.h)
 
 alignas(16) const unsigned char g_therm_model_data[] = {
                                                               0x20, 0x00, 0x00, 0x00, 0x54, 0x46, 0x4c, 0x33, 0x00, 0x00, 0x00, 0x00,

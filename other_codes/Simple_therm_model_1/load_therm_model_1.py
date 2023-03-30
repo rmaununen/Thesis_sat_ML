@@ -46,7 +46,7 @@ print('conversion completed')
 open(tflite_model_name + '.tflite', 'wb').write(tflite_model)
 print('tflite model was saved')
 
-y_test_pred_tflite = predict_tflite(tflite_model, x_values)
+y_test_pred_tflite = predict_tflite(tflite_model, x_values, 1)
 print('test inference of tflite model was performed')
 
 # Compare predictions

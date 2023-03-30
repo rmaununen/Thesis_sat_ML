@@ -9,7 +9,8 @@ print(np.shape(b))
 print(np.shape(d))
 
 
-my_list = [1.0, 2.5, 3.2, 4.8, 5.1, 6.7, 7.2, 8.9, 9.0, 10.5]
+my_list = np.array([1.0, 2.5, 3.2, 4.8, 5.1, 6.7, 7.2, 8.9, 9.0])
+ml = my_list.reshape(3, 3)
 
 # Starting index where the constant values should begin
 k = 3
@@ -23,4 +24,4 @@ constant_value = my_list[k]
 # Update the list to make the elements constant
 my_list[k:k+N] = [constant_value] * N
 
-print(my_list)
+print(ml)

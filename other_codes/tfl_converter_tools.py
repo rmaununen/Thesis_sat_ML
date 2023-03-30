@@ -2,10 +2,10 @@ import tensorflow as tf
 import numpy as np
 import random
 
-def predict_tflite(tflite_model, x_test):
+def predict_tflite(tflite_model, x_test, inp_size):
   # Prepare the test data
   x_test_ = x_test.copy()
-  x_test_ = x_test_.reshape((x_test.size, 1))
+  x_test_ = x_test_.reshape((len(x_test), inp_size))
   x_test_ = x_test_.astype(np.float32)
 
   # Initialize the TFLite interpreter
@@ -23,7 +23,7 @@ def predict_tflite(tflite_model, x_test):
     x_test_ = x_test_.astype(input_details["dtype"])
 
   # Invoke the interpreter
-  y_pred = np.empty(x_test_.size, dtype=output_details["dtype"])
+  y_pred = np.empty(len(x_test_), dtype=output_details["dtype"])
   for i in range(len(x_test_)):
     interpreter.set_tensor(input_details["index"], [x_test_[i]])
     interpreter.invoke()
@@ -83,10 +83,10 @@ def read_lists_from_txt(filename):
       list2.append(float(item2))
   return list1, list2
 
-def read_ptm_dataset(N):
+def read_ptm_dataset(N, filename):
   x_rows = []
   y_rows = []
-  with open("dataset_{}.txt".format(N), "r") as f:
+  with open(filename, "r") as f:
     for line in f:
       # Split the line into values
       values = line.strip().split()
@@ -106,3 +106,38 @@ def read_ptm_dataset(N):
     # Separate the tuples back into two lists
     x_rows, y_rows = zip(*xy_pairs)
   return np.array(x_rows), np.array(y_rows)
+
+import numpy as np
+
+def numpy_to_cpp_array(arr, filename):
+    """
+    Converts a NumPy array into a C++ array and writes it to a text file.
+
+    Parameters:
+    arr (numpy.ndarray): The NumPy array to be converted.
+    filename (str): The name of the file to which the C++ array will be written.
+
+    Returns:
+    None
+    """
+    # Open the file in write mode
+    with open(filename, 'w') as f:
+
+        # Write the C++ array declaration
+        f.write(f"int arr{arr.shape} = {{\n")
+
+        # Write the elements of the array
+        for i in range(arr.shape[0]):
+            f.write("  {")
+            for j in range(arr.shape[1]):
+                f.write(str(arr[i][j]))
+                if j != arr.shape[1] - 1:
+                    f.write(", ")
+            f.write("}")
+            if i != arr.shape[0] - 1:
+                f.write(",\n")
+
+        # Write the closing curly brace and semicolon
+        f.write("\n};\n")
+
+    print(f"The C++ array has been written to {filename}")

@@ -26,7 +26,7 @@ N_o = 1 # number of output neurons
 
 #Get dataset
 os.chdir('/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/Predicting_therm_model_1')
-x_values, y_values = read_ptm_dataset(N_i)
+x_values, y_values = read_ptm_dataset(N_i, 'dataset_30.txt')
 print('x_rows', np.shape(x_values), 'y rows:', np.shape(y_values))
 
 # Split the dataset into training, validation, and test sets
