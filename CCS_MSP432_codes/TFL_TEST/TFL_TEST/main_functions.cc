@@ -12,33 +12,26 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
-//#include <ti/devices/MSP432p4xx/inc/msp432p401r.h>
-//#include <ti/devices/DeviceFamily.h>
-//#define DeviceFamily_ID             DeviceFamily_ID_MSP432P401x
-//#define DeviceFamily_DIRECTORY      msp432p4xx
-//#define DeviceFamily_PARENT         DeviceFamily_PARENT_MSP432P401R
+
 #include <ti/drivers/UART.h>
 #include "ti_drivers_config.h"
-//#include <ti/drivers/uart/UARTMSP432.h>
-//#include "ti_drivers_config.h"
-//#include <msp.h>
-//#include <ti/devices/msp432p4xx/driverlib/driverlib.h>
 
 #include <TFL_TEST/constants.h>
 #include <TFL_TEST/input_data.h>
 #include <TFL_TEST/main_functions.h>
-#include <TFL_TEST/output_handler.h>
+#include <TFL_TEST/output_handler.h>      // <-- REPLACED BY UART DRIVER
 #include <TFL_TEST/therm_model_data.h>
 #include "tensorflow/lite/micro/all_ops_resolver.h"
-//#include "tensorflow/lite/micro/micro_error_reporter.h"
+//#include "tensorflow/lite/micro/micro_error_reporter.h" // <-- REPLACED BY UART DRIVER
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/micro/system_setup.h"
 #include "tensorflow/lite/schema/schema_generated.h"
-#include "tensorflow/lite/micro/micro_allocator.h"
+//#include "tensorflow/lite/micro/micro_allocator.h"
 
-// Globals, used for compatibility with Arduino-style sketches.
+// Globals
+
 namespace {
-//tflite::ErrorReporter* error_reporter = nullptr;
+//tflite::ErrorReporter* error_reporter = nullptr; // <-- REPLACED BY UART DRIVER
 const tflite::Model* model = nullptr;
 tflite::MicroInterpreter* interpreter = nullptr;
 TfLiteTensor* input = nullptr;
@@ -48,32 +41,47 @@ int inference_count = 0;
 constexpr int kTensorArenaSize = 2000;
 uint8_t tensor_arena[kTensorArenaSize];
 
-tflite::MicroAllocator* ma = nullptr; // <-- ADDED during thesis meeting 17.02.2023
+//tflite::MicroAllocator* ma = nullptr; // <-- ADDED during thesis meeting 17.02.2023
 
 UART_Handle uart;
 
-}  // namespace
+}
 
-//tflite::MicroAllocator  ma(tensor_arena, kTensorArenaSize);
-
-// The name of this function is important for Arduino compatibility.
+//Run once
 void setup() {
+
+  // One-time initialization of UART driver
+  UART_init();
+  UART_Params UARTparams;
+  UART_Params_init(&UARTparams);
+  UARTparams.baudRate = 115200;
+  UARTparams.readMode = UART_MODE_BLOCKING;
+  UARTparams.writeMode = UART_MODE_BLOCKING;
+  UARTparams.readTimeout = UART_WAIT_FOREVER;
+  UARTparams.writeTimeout = UART_WAIT_FOREVER;
+  UARTparams.dataLength = UART_LEN_8;
+  UARTparams.parityType = UART_PAR_NONE;
+  UARTparams.stopBits = UART_STOP_ONE;
+  uart = UART_open(CONFIG_UART_0, &UARTparams);
+
+
   tflite::InitializeTarget();
 
   // Set up logging. Google style is to avoid globals or statics because of
   // lifetime uncertainty, but since this has a trivial destructor it's okay.
   // NOLINTNEXTLINE(runtime-global-variables)
-  //static tflite::MicroErrorReporter micro_error_reporter;
-  //error_reporter = &micro_error_reporter;
+  //static tflite::MicroErrorReporter micro_error_reporter;   // <-- REPLACED BY UART DRIVER
+  //error_reporter = &micro_error_reporter;                   // <-- REPLACED BY UART DRIVER
 
   // Map the model into a usable data structure. This doesn't involve any
   // copying or parsing, it's a very lightweight operation.
   model = tflite::GetModel(g_therm_model_data);
   if (model->version() != TFLITE_SCHEMA_VERSION) {
-    //TF_LITE_REPORT_ERROR(error_reporter,
-    //                     "Model provided is schema version %d not equal "
-    //                     "to supported version %d.",
-    //                     model->version(), TFLITE_SCHEMA_VERSION);
+    //TF_LITE_REPORT_ERROR(error_reporter,                                     // <-- REPLACED BY UART DRIVER
+    //                     "Model provided is schema version %d not equal "    // <-- REPLACED BY UART DRIVER
+    //                     "to supported version %d.",                         // <-- REPLACED BY UART DRIVER
+    //                     model->version(), TFLITE_SCHEMA_VERSION);           // <-- REPLACED BY UART DRIVER
+    UART_write(uart, "Model version is not compatible", 31);
     return;
   }
 
@@ -81,7 +89,7 @@ void setup() {
   // NOLINTNEXTLINE(runtime-global-variables)
   static tflite::AllOpsResolver resolver;
 
-  ma = tflite::MicroAllocator::Create(tensor_arena, kTensorArenaSize); // <-- ADDED during thesis meeting 17.02.2023
+  //ma = tflite::MicroAllocator::Create(tensor_arena, kTensorArenaSize); // <-- ADDED during thesis meeting 17.02.2023
 
   // Build an interpreter to run the model with.
   static tflite::MicroInterpreter static_interpreter(model, resolver, tensor_arena, kTensorArenaSize); //20.02.23 removed "(... ,error_reporter)"
@@ -90,7 +98,8 @@ void setup() {
   // Allocate memory from the tensor_arena for the model's tensors.
   TfLiteStatus allocate_status = interpreter->AllocateTensors();
   if (allocate_status != kTfLiteOk) {
-    //TF_LITE_REPORT_ERROR(error_reporter, "AllocateTensors() failed");
+    //TF_LITE_REPORT_ERROR(error_reporter, "AllocateTensors() failed");      // <-- REPLACED BY UART DRIVER
+      UART_write(uart, "AllocateTensors() failed", 24);
     return;
   }
 
@@ -101,26 +110,9 @@ void setup() {
   // Keep track of how many inferences we have performed.
   inference_count = 0;
 
-  //UART
-
-  // One-time initialization of UART driver
-  UART_init();
-  // Initialize UART parameters
-  UART_Params params;
-  UART_Params_init(&params);
-  params.baudRate = 115200;
-  params.readMode = UART_MODE_BLOCKING;
-  params.writeMode = UART_MODE_BLOCKING;
-  params.readTimeout = UART_WAIT_FOREVER;
-  params.writeTimeout = UART_WAIT_FOREVER;
-  params.dataLength = UART_LEN_8;
-  params.parityType = UART_PAR_NONE;
-  params.stopBits = UART_STOP_ONE;
-  // Open the UART
-  uart = UART_open(CONFIG_UART_0, &params);
 }
 
-// The name of this function is important for Arduino compatibility.
+//Run forever
 void loop() {
   // Calculate an x value to feed into the model. We compare the current
   // inference_count to the number of inferences per cycle to determine
@@ -154,6 +146,7 @@ void loop() {
   if (invoke_status != kTfLiteOk) {
     //TF_LITE_REPORT_ERROR(error_reporter, "Invoke failed on x: %f\n",
     //                     static_cast<double>(inference_count));
+    UART_write(uart, "Invoke failed", 13);
     return;
   }
 
@@ -162,14 +155,20 @@ void loop() {
   // Dequantize the output from integer to floating-point
   float y = (y_quantized - output->params.zero_point) * output->params.scale;
 
+  char yString[32];
+  float_to_strGPT(yString, 32, 8, y);
+  //sprintf(yString, "%f", z);
+  //snprintf(yString, 50, "%f", z);
+  //snprintf(yString, sizeof(yString), "%.2f", z);
   // Output the results. A custom HandleOutput function can be implemented
   // for each supported hardware target.
-  //HandleOutput(error_reporter, inference_count, y);
+  //HandleOutput(error_reporter, inference_count, y);     // <-- REPLACED BY UART DRIVER
+
+
 
   //UART
-  //UART_write(uart, "Hello, world!\r\n", 15);
   char readBuf[100]; // Buffer to read incoming data from UART
-  int i;
+  //int i;
   int j;
 
   // Read string from UART if available
@@ -179,19 +178,26 @@ void loop() {
       for (j = 0; j < 30000000; j++) {
 
       }
-      for (i = 0; i < 20; i++) {
-          UART_write(uart, "string read from UART: ", 22);
-          UART_write(uart, readBuf, count);
-          UART_write(uart, "\n", 1); // start the next write on a new line
-          for (j = 0; j < 10000000; j++) {
+      float bufresult = string_to_float(readBuf);
+      //for (i = 0; i < 20; i++) {
+      UART_write(uart, "string read from UART: ", 23);
+      //UART_write(uart, readBuf, count);
+      bufresult += 1.0;
+      char bufresultstr[32];
+      float_to_strGPT(bufresultstr, 32, 8, bufresult);
+      UART_write(uart, bufresultstr, strlen(bufresultstr));
+      UART_write(uart, "\n", 1); // start the next write on a new line
+      UART_write(uart, yString, strlen(yString));
+      UART_write(uart, "\n", 1); // start the next write on a new line
 
-          }
+      for (j = 0; j < 10000000; j++) {
+
       }
+      inference_count += 1;
+      //}
   }
 
   // Increment the inference_counter, and reset it if we have reached
   // the total number per cycle
-  inference_count += 1;
   if (inference_count >= kInferencesPerCycle) inference_count = 0;
-  //__delay_cycles(100000); //1 s delay introduced 24.03.23
 }

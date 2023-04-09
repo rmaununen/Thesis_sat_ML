@@ -2,6 +2,7 @@
 from matplotlib import pyplot
 import serial
 import time
+import struct
 #1410 or 1420
 
 #/dev/cu.usbserial-1420
@@ -19,7 +20,7 @@ while True:
     # Send user input string over serial
     serialcom.write(user_input.encode())
     # Read lines from serial for 5 seconds after sending user input string
-    while (time.time() - time_init) <= 5:
+    while (time.time() - time_init) <= 0.1:
         # Read line from serial (if there is anything to read)
         line = serialcom.readline().decode().rstrip()
         print(line)

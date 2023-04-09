@@ -41,7 +41,7 @@
 //#include <ti/drivers/UART.h>
 
 #include <ti/drivers/GPIO.h>
-#include <ti/display/Display.h>
+//#include <ti/display/Display.h>
 #include <TFL_TEST/main_functions.h>
 #include "ti_drivers_config.h"
 

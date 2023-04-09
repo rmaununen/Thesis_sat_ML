@@ -16,4 +16,4 @@ limitations under the License.
 #include <TFL_TEST/constants.h>
 
 // This is a small number so that it's easy to read the logs
-const int kInferencesPerCycle = 177;
+const int kInferencesPerCycle = 2;
