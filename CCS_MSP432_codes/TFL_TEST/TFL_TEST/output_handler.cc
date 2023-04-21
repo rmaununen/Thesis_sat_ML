@@ -27,7 +27,7 @@ void HandleOutput(tflite::ErrorReporter* error_reporter, float x_value,
 */
 
 
-void float_to_strGPT(char* buf, uint32_t bufsize, uint32_t num_decimal_places, float f) {
+void float_to_str(char* buf, uint32_t bufsize, uint32_t num_decimal_places, float f) {
   if (bufsize < MAX_FLOAT_STR_LEN) {
     return;
   }

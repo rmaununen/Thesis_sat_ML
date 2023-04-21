@@ -7,7 +7,7 @@ N = 30
 with open("new_dataset_{}.txt".format(N), "w") as output_file:
     # Iterate over the output files in the "output_files" directory
     for output_file_name in os.listdir("telemetry_FUNCUBE"):
-        if output_file_name.startswith("output_") and (output_file_name == "output_bp_286.txt"):
+        if output_file_name.startswith("output_"):# and (output_file_name == "output_bp_286.txt"):
             # Read the values from the output file into a list
             values = []
             with open(os.path.join("telemetry_FUNCUBE", output_file_name), "r") as f:

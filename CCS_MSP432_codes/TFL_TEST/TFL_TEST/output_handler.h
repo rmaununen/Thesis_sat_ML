@@ -36,7 +36,7 @@ void HandleOutput(tflite::ErrorReporter* error_reporter, float x_value,
 
 #define MAX_FLOAT_STR_LEN 32
 
-void float_to_strGPT(char* buf, uint32_t bufsize, uint32_t num_decimal_places, float f);
+void float_to_str(char* buf, uint32_t bufsize, uint32_t num_decimal_places, float f);
 
 #endif /* FLOAT_TO_STR_H */
 
