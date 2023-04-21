@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
-
+#include <stdint.h>
 #include <ti/drivers/UART.h>
 #include "ti_drivers_config.h"
 
@@ -20,7 +20,6 @@ limitations under the License.
 #include <TFL_TEST/input_data.h>
 #include <TFL_TEST/main_functions.h>
 #include <TFL_TEST/output_handler.h>      // <-- REPLACED functions
-//#include <TFL_TEST/therm_model_data.h>
 #include "tensorflow/lite/micro/all_ops_resolver.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/micro/system_setup.h"
@@ -32,51 +31,16 @@ const tflite::Model* model = nullptr;
 tflite::MicroInterpreter* interpreter = nullptr;
 TfLiteTensor* input = nullptr;
 TfLiteTensor* output = nullptr;
-int inference_count = 0;
 
-constexpr int kTensorArenaSize = 2000;
+constexpr int kTensorArenaSize = 4000;
 uint8_t tensor_arena[kTensorArenaSize];
 
 UART_Handle uart;
 
-float circularBuffer[30];
 bool firstval = true;
 
-#define MODEL_DATA_SIZE 3952
-// Define the C array that will hold the model data
-//alignas(16) uint8_t therm_model_data[MODEL_DATA_SIZE] = { 0 };
-// Define the model data array
-uint8_t model_data[MODEL_DATA_SIZE] __attribute__((aligned(16)));
+int input_size = 0;
 }
-
-// Function to receive the model data over UART
-#include <stdint.h>
-/*#include <stdio.h>
-// Function to receive the model data through UART
-void receive_model_data(UART_Handle uart) {
-  // Define a buffer to store the received data
-  char buffer[256];
-  int i = 0;
-
-  // Receive data until we receive the entire model data
-  while (i < MODEL_DATA_SIZE) {
-    // Receive a line of data through UART
-    UART_read(uart, &buffer[i], 1);
-
-    // If we receive a newline character, move to the next line
-    if (buffer[i] == 'x') {
-      i++;
-    }
-  }
-
-  // Parse the received data and store it in a C array
-  char* ptr = strtok((char*)buffer, "\n");
-  while (ptr != NULL) {
-    model_data[i++] = strtoul(ptr, NULL, 16);
-    ptr = strtok(NULL, "\n");
-  }
-}*/
-
 
 //Run once
 void setup() {
@@ -95,27 +59,35 @@ void setup() {
   UARTparams.stopBits = UART_STOP_ONE;
   uart = UART_open(CONFIG_UART_0, &UARTparams);
 
-  //GET MODEL DATA FROM UART
-  /*bool model_received = false;
-  unsigned char uart_model_data[3952];
-  int k = 0;
-  while (not model_received){
-      char readBuf0[100]; // Buffer to read incoming data from UART
-      int count = UART_read(uart, readBuf0, sizeof(readBuf0)); // Read data from UART
-      if (count > 0) {
-          if (*readBuf0 == '0'){ //if 0 is in string (checks whether model data is being received)
-              unsigned char uc = reinterpret_cast<unsigned char&>(readBuf0);
-              //char c = reinterpret_cast<char&>(uc);
-              //UART_write(uart, *c, strlen(*c)); //TEST0
-              uart_model_data[k] = uc;
-              k++;
-          }
-          if (*readBuf0 == '-'){ //if - is in string (checks for data transfer end flag)
-              model_received = true;
-          }
-      }
-  }*/
+  // Receive the model data size through UART
+  int model_data_size = 0;
+  bool model_size_received = false;
+  char readSize[32];
+  while (!model_size_received) {
+    int count = UART_read(uart, readSize, sizeof(readSize)); // Reads entire line (one value, like 0x00)
+    if (count > 0) { // If a line is read
+        model_data_size = strtoul(readSize, NULL, 10); // Parse the read value
+        model_size_received = true;
+    }
+  }
+  UART_write(uart, "Model data size has been received on MSP\n", 41);
+
+  // Receive the model data size through UART
+
+  bool inp_size_received = false;
+  //char readSize[32];
+  while (!inp_size_received) {
+    int count = UART_read(uart, readSize, sizeof(readSize)); // Reads entire line (one value, like 0x00)
+    if (count > 0) { // If a line is read
+        input_size = strtoul(readSize, NULL, 10); // Parse the read value
+        inp_size_received = true;
+    }
+  }
+  UART_write(uart, "Model input size has been received on MSP\n", 42);
+
+
   // Receive the model data through UART
+  uint8_t model_data[model_data_size] __attribute__((aligned(16))); // Model data array to be filled
   bool model_received = false;
   int k = 0;
   char readBuf0[100];
@@ -123,12 +95,9 @@ void setup() {
     int count = UART_read(uart, readBuf0, sizeof(readBuf0)); // Reads entire line (one value, like 0x00)
     if (count > 0) { // If a line is read
       char* ptr = strtok(readBuf0, "\n"); // Parse the read value
-      //while (ptr != NULL) {
       model_data[k++] = strtoul(ptr, NULL, 16); // Add it to the model data array
-      //ptr = strtok(NULL, "\n");
-      //}
     }
-    if (k == MODEL_DATA_SIZE) { // If we've received the entire model data
+    if (k == model_data_size) { // If we've received the entire model data
       model_received = true;
     }
   }
@@ -162,19 +131,16 @@ void setup() {
   input = interpreter->input(0);
   output = interpreter->output(0);
 
-  // Keep track of how many inferences we have performed.
-  inference_count = 0;
-
 }
 
 //Run forever
 void loop() {
   // Set up the input tensor (read input float from UART)
+  float circularBuffer[input_size];
   char readBuf[100]; // Buffer to read incoming data from UART
   int count = UART_read(uart, readBuf, sizeof(readBuf)); // Read data from UART
   if (count > 0) {
       // Convert the received string to a float and store it in the circular buffer
-      //UART_write(uart, readBuf, strlen(readBuf));  //TEST1
       if (*readBuf == 'f'){
           firstval = true;
       }
@@ -189,39 +155,27 @@ void loop() {
 
           if (firstval == true) {
               // If this is the first value received, set all elements of the buffer to this value
-              for (int i = 0; i < 30; i++) {
+              for (int i = 0; i < input_size; i++) {
                   circularBuffer[i] = newValue;
               }
               firstval = false;
-              //UART_write(uart, "firstval", 8); //TEST
           } else {
               // Shift the elements of the circular buffer by one position and add the new value
-              for (int i = 0; i < 29; i++) {
+              for (int i = 0; i < (input_size-1); i++) {
                   circularBuffer[i] = circularBuffer[i + 1];
               }
-              circularBuffer[29] = newValue;
-              //UART_write(uart, "second", 6); //TEST
+              circularBuffer[(input_size-1)] = newValue;
           }
-          /*
-          // Print the received float values for debugging purposes
-          for (int i = 0; i < 30; i++) {
-              UART_write(uart, "Array value: ", 13);
-              char float_str[100];
-              float_to_str(float_str, sizeof(float_str), 8, circularBuffer[i]);
-              UART_write(uart, float_str, strlen(float_str));
-              UART_write(uart, "\n", 1); // start the next write on a new line
-          }
-          */
       }
 
   }
 
   // Quantize input <-- Integrate into tensor reading
-  int8_t quantized_input_data[30];
-  for (int i = 0; i < 30; i++) {
+  int8_t quantized_input_data[input_size];
+  for (int i = 0; i < input_size; i++) {
     quantized_input_data[i] = static_cast<int8_t>(circularBuffer[i] / input->params.scale + input->params.zero_point);
   }
-  memcpy(input->data.int8, quantized_input_data, 30 * sizeof(int8_t));
+  memcpy(input->data.int8, quantized_input_data, input_size * sizeof(int8_t));
 
   // Run inference, and report any error
   TfLiteStatus invoke_status = interpreter->Invoke();
@@ -242,7 +196,4 @@ void loop() {
   UART_write(uart, yString, strlen(yString));
   UART_write(uart, "\n", 1); // start the next write on a new line
 
-  // Increment the inference_counter, and reset it if we have reached
-  // the total number per cycle
-  if (inference_count >= kInferencesPerCycle) inference_count = 0;
 }

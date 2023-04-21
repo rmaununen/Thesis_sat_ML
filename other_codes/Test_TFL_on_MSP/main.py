@@ -8,7 +8,7 @@ import numpy as np
 
 model_name = 'ptm_1.h'
 model_desc = ''
-model_size = ''
+model_size = '3952'
 date_time = ''
 n_points_inp = 30
 
@@ -23,6 +23,31 @@ if not os.path.exists(report_directory_name):
 
 serialcom = serial.Serial('/dev/cu.usbmodemM43210051', baudrate=115200, timeout=0.01) #Change port name to the one you are using
 
+#SENDING MODEL DATA SIZE
+print('Sending model data size to MSP [...in progress...]')
+serialcom.write((model_size+'\n').encode())
+print('Model data size has been sent\n')
+time_init = time.time_ns() // 1000000
+time_now = time_init
+while (time_now - time_init) <= 1000:
+    time_now = time.time_ns() // 1000000
+    # Read line from serial (if there is anything to read)
+    l = serialcom.readline().decode().rstrip()
+    if len(l) > 0:
+        print(l)
+
+#SENDING MODEL INPUT SIZE
+print('Sending model input size to MSP [...in progress...]')
+serialcom.write((str(n_points_inp)+'\n').encode())
+print('Model input size has been sent\n')
+time_init = time.time_ns() // 1000000
+time_now = time_init
+while (time_now - time_init) <= 1000:
+    time_now = time.time_ns() // 1000000
+    # Read line from serial (if there is anything to read)
+    l = serialcom.readline().decode().rstrip()
+    if len(l) > 0:
+        print(l)
 
 #SENDING MODEL DATA
 print('Sending model data to MSP [...in progress...]')
@@ -53,10 +78,7 @@ for m in mod_dat:
             print(l)
     '''
     time.sleep(0.005)
-    #print(m)
-#Write finish flag to Serial
-#finish_flag = '---\n'
-#serialcom.write(finish_flag.encode())
+
 print('Model data has been sent\n')
 
 #Check for any error reports from MSP
@@ -148,7 +170,7 @@ while reading:
             fig.savefig(plot_name)
 
     # Generate the HTML report
-    print('Making HTML report file')
+    print('Making HTML report file [...in progress...]')
     nplots = 57*2
     # Create an HTML page with captions for each plot
     html_template = '<html><head><title>TFL test report {}</title></head><body><h1>TFL test report {}</h1>{}</body></html>'
@@ -163,7 +185,7 @@ while reading:
             couple = [match.group(1) + '_results.png', match.group(1) + '_error.png']
             if couple[1] in files:
                 couples.append(couple)
-    print(couples)
+    #print(couples)
 
     figure_html = ''
     plt_id = 1
@@ -180,5 +202,5 @@ while reading:
     print('HTML report file has been made')
     # Close serial port
     serialcom.close()
-    print('Done')
+    print('\nDone')
     reading = False
