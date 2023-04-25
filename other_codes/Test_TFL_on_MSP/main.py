@@ -170,7 +170,7 @@ while reading:
             fig.savefig(plot_name)
 
     # Generate the HTML report
-    print('Making HTML report file [...in progress...]')
+    print('\nMaking HTML report file [...in progress...]')
     nplots = 57*2
     # Create an HTML page with captions for each plot
     html_template = '<html><head><title>TFL test report {}</title></head><body><h1>TFL test report {}</h1>{}</body></html>'
