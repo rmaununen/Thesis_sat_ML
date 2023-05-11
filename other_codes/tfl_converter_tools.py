@@ -83,17 +83,17 @@ def read_lists_from_txt(filename):
       list2.append(float(item2))
   return list1, list2
 
-def read_ptm_dataset(N, filename):
+def read_ptm_dataset(N, N_o, filename):
   x_rows = []
   y_rows = []
   with open(filename, "r") as f:
     for line in f:
       # Split the line into values
       values = line.strip().split()
-      if len(values) == N + 1:
+      if len(values) == N + N_o:
         # Extract the input and output values
-        x = [float(v) for v in values[1:]] #values[:-1]]
-        y = [float(values[0])]
+        x = [float(v) for v in values[2:]] #values[:-1]]
+        y = [float(v) for v in values[0:2]]
         x_rows.append(x)
         y_rows.append(y)
       else:

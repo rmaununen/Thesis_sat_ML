@@ -10,7 +10,7 @@ import os
 import re
 Working_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1'
 Telemetry_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1/Telemetry'
-Dataset_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1/Dataset'
+Dataset_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1/Dataset_2'
 report_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1/TF_test_report'
 print(os.getcwd())
 
@@ -19,6 +19,7 @@ gradcam = False
 plot_tests = True
 make_report = True
 N_i = 60
+N_o = 2
 
 tflite_model_name = 'adm_1'  # Will be given .tflite suffix
 c_model_name = 'adm_1'       # Will be given .h suffix
@@ -34,10 +35,14 @@ weight_arr = np.array(weights_abs_sum)
 print(weight_arr)
 print('------------------------------')
 # Visualize the importance scores using a heatmap
+fig = plt.figure()
+ax = fig.add_subplot(111)
 plt.imshow(weight_arr.reshape(3, 20), cmap='hot')
 plt.title(f'Sum of abs. weights per input layer neuron. {tf_model_name}')
 plt.colorbar()
 plt.show()
+plot_name = f'{report_dir}/input_weights.png'
+fig.savefig(plot_name)
 # Define a function to calculate the gradient of the output with respect to each input
 def get_gradients(model, inputs):
     with tf.GradientTape() as tape:
@@ -58,21 +63,33 @@ for test_file in os.listdir(Dataset_dir):
     x_test_dat_2 = []
     x_test_dat_3 = []
     y_test_rows = []
+    y_test_rows0 = []
     with open(test_file, "r") as f:
         for line in f:
             # Split the line into values
             values = line.strip().split()
-            if len(values) == N_i + 1:
+            if len(values) == N_i + 2:
                 # Extract the input and output values
-                x = [float(v) for v in values[1:]]
+                x = [float(v) for v in values[N_o:]]
                 x_test_rows.append(x)
                 x_test_dat_1.append(x[19])
                 x_test_dat_2.append(x[39])
                 x_test_dat_3.append(x[59])
-                y = float(values[0])
+                y = float(values[1])
                 y_test_rows.append(y)
+                y0 = float(values[0])
+                y_test_rows0.append(y0)
 
     predictions = model.predict(np.array(x_test_rows))
+    predictions0 = predictions[:, 0]
+    predictions1 = predictions[:, 1]
+    pred1_lst0 = predictions1.flatten().tolist()
+    pred1_lst = []
+    for p in pred1_lst0:
+        if p< threshold_out:
+            pred1_lst.append(0)
+        else:
+            pred1_lst.append(1)
     x_time = []
     t = 0
     for i in range(len(y_test_rows)):
@@ -81,7 +98,7 @@ for test_file in os.listdir(Dataset_dir):
     if ('1187' in test_file):
         #add up all model inference results for later acuracy analysis
         all_act += y_test_rows
-        all_mod += predictions.flatten().tolist()
+        all_mod += pred1_lst#predictions1.flatten().tolist()
         #print current test file name
         print(test_file)
 
@@ -92,7 +109,7 @@ for test_file in os.listdir(Dataset_dir):
         plt.clf()
         plt.title(f'Actual vs model {tf_model_name}, {test_file}')
         plt.plot(x_time, y_test_rows, 'b', linewidth=3, label='Actual anomaly label')
-        plt.plot(x_time, predictions, 'r', label='Model output')
+        plt.plot(x_time, pred1_lst, 'r', label='Model output')
         plt.legend()
         plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
         plt.minorticks_on()
@@ -118,6 +135,22 @@ for test_file in os.listdir(Dataset_dir):
         plt.grid(b=True, which='minor', color='grey', linestyle='-', alpha=0.1)
         # plt.show()
         plot_name = f'{report_dir}/{test_file}_sens.png'
+        fig.savefig(plot_name)
+        plt.clf()
+
+        # Model prediction vs actual sensor
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        plt.clf()
+        plt.title(f'Actual vs model prediction {tf_model_name}, {test_file}')
+        plt.plot(x_time, y_test_rows0, 'b', linewidth=3, label='Actual sensor panel 1')
+        plt.plot(x_time, predictions0, 'r', label='Model prediction')
+        plt.legend()
+        plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
+        plt.minorticks_on()
+        plt.grid(b=True, which='minor', color='grey', linestyle='-', alpha=0.1)
+        # plt.show()
+        plot_name = f'{report_dir}/{test_file}_pred.png'
         fig.savefig(plot_name)
         plt.clf()
 
@@ -155,15 +188,15 @@ if make_report:
     print('\nMaking HTML report file [...in progress...]')
     # Create an HTML page with captions for each plot
     html_template = '<html><head><title>TF test report {}</title></head><body><h1>TF test report {}</h1><h3>Test time: {}</h3><h3>Model name: {}</h3><h3>Model type: {}</h3><h3>Model description: {}</h3><h3>Model data size: {}</h3><br><h2>Test results:</h2><h3>Accuracy on NO anomalies (0): {}</h3><h3>Accuracy on ANOMALIES (1): {}</h3>{}</body></html>'
-    figure_template = '<figure><div style="display: flex; flex-direction: row;"><img src="{}"><img src="{}"></div><figcaption>{}</figcaption></figure>'
-
+    figure_template = '<figure><div style="display: flex; flex-direction: row;"><img src="{}"><img src="{}"></div></figure>'
+    figure_template1 = '<figure><div><img src="{}"></div><figcaption>{}</figcaption></figure>'
     # find couple plots
     files = os.listdir(report_dir)
     couples = []
     for filename in files:
         match = re.match(r'^(.*)_mod\.png$', filename)
         if match:
-            couple = [match.group(1) + '_sens.png', match.group(1) + '_mod.png']
+            couple = [match.group(1) + '_sens.png', match.group(1) + '_mod.png', match.group(1) + '_pred.png']
             if couple[1] in files:
                 couples.append(couple)
     # print(couples)
@@ -178,8 +211,10 @@ if make_report:
     for couple in couples:
         plot_file1 = couple[0]
         plot_file2 = couple[1]
+        plot_file3 = couple[2]
         fig_caption = f'Figure {plt_id}: model inferences on {plot_file1}'
-        figure_html += figure_template.format(plot_file1, plot_file2, fig_caption)
+        figure_html += figure_template.format(plot_file1, plot_file2)
+        figure_html += figure_template1.format(plot_file3, fig_caption)
         plt_id += 1
 
     html_content = html_template.format(id, id, date_time, model_name, model_type, model_desc, model_size, round(acc_2, 4), round(acc_1, 4),

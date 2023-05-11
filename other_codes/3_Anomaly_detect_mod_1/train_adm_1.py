@@ -6,10 +6,10 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 sys.path.append('/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes')
 from other_codes.tfl_converter_tools import *
-Dataset_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1/Dataset'
+Dataset_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1/Dataset_2'
 Working_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1'
 
-training_dataset = 'training_dataset_1_1.txt'
+training_dataset = 'training_dataset_1_2.txt'
 
 # Print versions
 print('Numpy ' + np.__version__)
@@ -18,20 +18,20 @@ print('Keras ' + tf.keras.__version__)
 
 # Settings
 plot_ds = True
-nsamples = 13753     # Number of samples to use as a dataset
+nsamples = 13651     # Number of samples to use as a dataset
 val_ratio = 0.3     # Fraction of samples that should be held for validation set
-model_name = 'adm_12'  # Will be given .h5 suffix
+model_name = 'adm_13'  # Will be given .h5 suffix
 N_i = 60 # number of input neurons
 H1 = 32 # number of neurons on the hidden layers
 H2 = 32 # number of neurons on the hidden layers
 H3 = 32 # number of neurons on the hidden layers
-N_o = 1 # number of output neurons
+N_o = 2 # number of output neurons
 nepochs = 400
 sbatch = 100
 
 #Get dataset
 os.chdir(Working_dir)
-x_values, y_values = read_ptm_dataset(N_i, training_dataset)
+x_values, y_values = read_ptm_dataset(N_i, N_o, training_dataset)
 print('x_rows', np.shape(x_values), 'y rows:', np.shape(y_values))
 
 # Split the dataset into training, validation, and test sets
@@ -55,7 +55,7 @@ model = tf.keras.Sequential([
     tf.keras.layers.Dense(H1, activation='relu', input_shape=(N_i,)),
     tf.keras.layers.Dense(H2, activation='relu'),
     tf.keras.layers.Dense(H3, activation='relu'),
-    tf.keras.layers.Dense(N_o, activation='sigmoid')
+    tf.keras.layers.Dense(N_o)#, activation='relu')
 ])
 # View model
 model.summary()
@@ -81,17 +81,18 @@ plt.title('Training and validation loss')
 plt.legend()
 plt.show()
 
+''' *******************   TESTING   ********************** '''
 x_test_rows = []
 y_test_rows = []
 os.chdir(Dataset_dir)
-with open("dataset_44_1", "r") as f:
+with open("dataset_1187_1_new.txt", "r") as f:
     for line in f:
         # Split the line into values
         values = line.strip().split()
-        if len(values) == N_i + 1:
+        if len(values) == N_i + N_o:
             # Extract the input and output values
-            x = [float(v) for v in values[1:]]
-            y = float(values[0])
+            x = [float(v) for v in values[2:]]
+            y = [float(v) for v in values[0:2]]
             x_test_rows.append(x)
             y_test_rows.append(y)
 
@@ -104,11 +105,22 @@ for i in range(len(y_test_rows)):
 fig = plt.figure()
 ax = fig.add_subplot(111)
 plt.clf()
-plt.title("Comparison of predictions to actual values")
-plt.plot(x_time, y_test_rows, 'b', label='Actual values')
-plt.plot(x_time, predictions, 'r', label='Model predictions')
+plt.title("Comparison of predictions to actual values output 1")
+plt.plot(x_time, np.array(y_test_rows)[:, 1], 'b', label='Actual values')
+plt.plot(x_time, predictions[:, 1], 'r', label='Model predictions')
 plt.legend()
 plt.show()
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+plt.clf()
+plt.title("Comparison of predictions to actual values output 2")
+plt.plot(x_time, np.array(y_test_rows)[:, 0], 'b', label='Actual values')
+plt.plot(x_time, predictions[:, 0], 'r', label='Model predictions')
+plt.legend()
+plt.show()
+
+
 
 #SAVE MODEL
 os.chdir(Working_dir)

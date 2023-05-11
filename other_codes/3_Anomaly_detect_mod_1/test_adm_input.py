@@ -7,16 +7,17 @@ This is the input file to test an anomaly detecting model (TF, NOT TFL)
 import datetime
 
 #REPORT PARAMETERS
-id = 1.0 #test ID that will be printed in the report name header
+id = 1.5 #test ID that will be printed in the report name header
 #report_directory = "/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/Test_TFL_on_MSP"
 
 #MODEL PARAMETERS
 #model_directory = "/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/2_Predicting_therm_model_1"
-model_name = 'adm_12.h'
-tf_model_name = 'adm_12'  #The existing model
+threshold_out = 0.2
+model_name = f'adm_13.h  (WITH THRESHOLD OUTPUT CLASSIFICATION {threshold_out})'
+tf_model_name = 'adm_13'  #The existing model
 
 model_type = 'MLP'
-model_desc = '60x32x32x32x1 MLP to detect based on the previous 20 points from 3 panels. Re-trained on a smaller dataset. Tested on previously unseen data.'
+model_desc = '60x32x32x32x2 MLP to detect based on the previous 20 points from 3 panels, and predict the next point on panel 1. Tested on previously unseen data.'
 model_size = 'NA'
 n_points_inp = 60
 

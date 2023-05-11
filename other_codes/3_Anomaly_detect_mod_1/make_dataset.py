@@ -197,7 +197,7 @@ def produce_dataset():
     os.chdir(Working_dir)
 
     # open the output file in append mode
-    with open('training_dataset_1_1.txt', 'a') as output_file:
+    with open('training_dataset_1_2.txt', 'a') as output_file:
 
         # loop through all files in the directory
         for filename in os.listdir(Dataset_dir):
@@ -205,14 +205,43 @@ def produce_dataset():
                 # get the full path of the file
                 file_path = os.path.join(Dataset_dir, filename)
 
+                with open(file_path, "r") as f:
+                    prev_line = []
+                    for line in f:
+                        # Split the line into values
+                        values = line.strip().split()
+                        val = [str(v)+' ' for v in values[:]]
+                        prev_line.insert(0, val[20])
+                        if len(prev_line)>2:
+                            prev_line.append('\n')
+                            output_file.writelines(prev_line)
+                        prev_line = val
+            else:
+                # get the full path of the file
+                file_path = os.path.join(Dataset_dir, filename)
+
+                with open(file_path, "r") as f:
+                    with open(f'{filename}_new.txt', 'w') as out_file:
+                        prev_line = []
+                        for line in f:
+                            # Split the line into values
+                            values = line.strip().split()
+                            val = [str(v) + ' ' for v in values[:]]
+                            prev_line.insert(0, val[20])
+                            if len(prev_line) > 2:
+                                prev_line.append('\n')
+                                out_file.writelines(prev_line)
+                            prev_line = val
+                ''''
                 # open the file in read mode
                 with open(file_path, 'r') as input_file:
-
+                
                     # read all lines from the file
                     lines = input_file.readlines()
-
+                
                     # write the lines to the output file
                     output_file.writelines(lines)
+                '''
 
 #create_datasets()
 produce_dataset()
