@@ -197,24 +197,24 @@ def produce_dataset():
     os.chdir(Working_dir)
 
     # open the output file in append mode
-    with open('training_dataset.txt', 'a') as output_file:
+    with open('training_dataset_1_1.txt', 'a') as output_file:
 
         # loop through all files in the directory
         for filename in os.listdir(Dataset_dir):
+            if not '1187' in filename: #SELECT THE PART TO BE LEFT FOR TESTING, in this case 1187
+                # get the full path of the file
+                file_path = os.path.join(Dataset_dir, filename)
 
-            # get the full path of the file
-            file_path = os.path.join(Dataset_dir, filename)
+                # open the file in read mode
+                with open(file_path, 'r') as input_file:
 
-            # open the file in read mode
-            with open(file_path, 'r') as input_file:
+                    # read all lines from the file
+                    lines = input_file.readlines()
 
-                # read all lines from the file
-                lines = input_file.readlines()
+                    # write the lines to the output file
+                    output_file.writelines(lines)
 
-                # write the lines to the output file
-                output_file.writelines(lines)
-
-create_datasets()
+#create_datasets()
 produce_dataset()
 '''
     if main_panel in output_file_name and (output_file_name == 'output_+X_44.txt'):

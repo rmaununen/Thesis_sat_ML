@@ -9,6 +9,7 @@ from other_codes.tfl_converter_tools import *
 Dataset_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1/Dataset'
 Working_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1'
 
+training_dataset = 'training_dataset_1_1.txt'
 
 # Print versions
 print('Numpy ' + np.__version__)
@@ -17,9 +18,9 @@ print('Keras ' + tf.keras.__version__)
 
 # Settings
 plot_ds = True
-nsamples = 16949     # Number of samples to use as a dataset
+nsamples = 13753     # Number of samples to use as a dataset
 val_ratio = 0.3     # Fraction of samples that should be held for validation set
-model_name = 'adm_11'  # Will be given .tflite suffix
+model_name = 'adm_12'  # Will be given .h5 suffix
 N_i = 60 # number of input neurons
 H1 = 32 # number of neurons on the hidden layers
 H2 = 32 # number of neurons on the hidden layers
@@ -30,7 +31,7 @@ sbatch = 100
 
 #Get dataset
 os.chdir(Working_dir)
-x_values, y_values = read_ptm_dataset(N_i, 'training_dataset.txt')
+x_values, y_values = read_ptm_dataset(N_i, training_dataset)
 print('x_rows', np.shape(x_values), 'y rows:', np.shape(y_values))
 
 # Split the dataset into training, validation, and test sets
@@ -110,4 +111,5 @@ plt.legend()
 plt.show()
 
 #SAVE MODEL
+os.chdir(Working_dir)
 model.save(model_name+'.h5')
