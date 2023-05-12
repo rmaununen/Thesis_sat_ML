@@ -18,6 +18,7 @@ convert = False
 gradcam = False
 plot_tests = True
 make_report = True
+filter_thrshld = True
 N_i = 60
 N_o = 2
 
@@ -90,6 +91,8 @@ for test_file in os.listdir(Dataset_dir):
             pred1_lst.append(0)
         else:
             pred1_lst.append(1)
+    if not filter_thrshld:
+        pred1_lst = pred1_lst0
     x_time = []
     t = 0
     for i in range(len(y_test_rows)):

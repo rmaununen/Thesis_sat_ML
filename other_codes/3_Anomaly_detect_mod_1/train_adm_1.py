@@ -9,7 +9,7 @@ from other_codes.tfl_converter_tools import *
 Dataset_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1/Dataset_2'
 Working_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1'
 
-training_dataset = 'training_dataset_1_2.txt'
+training_dataset = 'training_dataset_1_3.txt'
 
 # Print versions
 print('Numpy ' + np.__version__)
@@ -20,7 +20,7 @@ print('Keras ' + tf.keras.__version__)
 plot_ds = True
 nsamples = 13651     # Number of samples to use as a dataset
 val_ratio = 0.3     # Fraction of samples that should be held for validation set
-model_name = 'adm_13'  # Will be given .h5 suffix
+model_name = 'adm_14'  # Will be given .h5 suffix
 N_i = 60 # number of input neurons
 H1 = 32 # number of neurons on the hidden layers
 H2 = 32 # number of neurons on the hidden layers

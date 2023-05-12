@@ -1,5 +1,5 @@
 import os
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 Working_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1'
 Telemetry_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1/Telemetry'
 Dataset_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1/Dataset'
@@ -195,13 +195,17 @@ def create_datasets():
 def produce_dataset():
     # specify the output file path and name
     os.chdir(Working_dir)
-
+    l44 = []
+    l163 = []
+    l286 = []
+    l529 = []
+    l775 = []
+    l1042 = []
     # open the output file in append mode
-    with open('training_dataset_1_2.txt', 'a') as output_file:
-
-        # loop through all files in the directory
+    with open('training_dataset_1_3.txt', 'a') as output_file:
+        # loop through all files in the directory, PREPARE ANOMALY FREE PREDICTIONS
         for filename in os.listdir(Dataset_dir):
-            if not '1187' in filename: #SELECT THE PART TO BE LEFT FOR TESTING, in this case 1187
+            if (not '1187' in filename) and (filename[-1] == '0') and (filename[-2]=='_'):  # SELECT THE PART TO BE LEFT FOR TESTING, in this case 1187
                 # get the full path of the file
                 file_path = os.path.join(Dataset_dir, filename)
 
@@ -210,12 +214,59 @@ def produce_dataset():
                     for line in f:
                         # Split the line into values
                         values = line.strip().split()
-                        val = [str(v)+' ' for v in values[:]]
+                        val = [str(v) + ' ' for v in values[:]]
                         prev_line.insert(0, val[20])
+                        if len(prev_line) > 2:
+                            if '44' in filename:
+                                l44.append(prev_line[0])
+                            elif '163' in filename:
+                                l163.append(prev_line[0])
+                            elif '286' in filename:
+                                l286.append(prev_line[0])
+                            elif '529' in filename:
+                                l529.append(prev_line[0])
+                            elif '775' in filename:
+                                l775.append(prev_line[0])
+                            elif '1042' in filename:
+                                l1042.append(prev_line[0])
+                            prev_line.append('\n')
+                            #output_file.writelines(prev_line)
+                        prev_line = val
+
+        # loop through all files in the directory§
+        for filename in os.listdir(Dataset_dir):
+            if not '1187' in filename: #SELECT THE PART TO BE LEFT FOR TESTING, in this case 1187
+                # get the full path of the file
+                file_path = os.path.join(Dataset_dir, filename)
+
+                with open(file_path, "r") as f:
+                    prev_line = []
+                    i = -1
+                    for line in f:
+                        # Split the line into values
+                        values = line.strip().split()
+                        val = [str(v)+' ' for v in values[:]]
+                        #prev_line.insert(0, val[20])
+                        if i > -1:
+                            if '44' in filename:
+                                prev_line.insert(0, l44[i])
+                            elif '163' in filename:
+                                prev_line.insert(0, l163[i])
+                            elif '286' in filename:
+                                prev_line.insert(0, l286[i])
+                            elif '529' in filename:
+                                prev_line.insert(0, l529[i])
+                            elif '775' in filename:
+                                prev_line.insert(0, l775[i])
+                            elif '1042' in filename:
+                                prev_line.insert(0, l1042[i])
+                        i+=1
                         if len(prev_line)>2:
                             prev_line.append('\n')
                             output_file.writelines(prev_line)
                         prev_line = val
+
+            '''
             else:
                 # get the full path of the file
                 file_path = os.path.join(Dataset_dir, filename)
@@ -232,7 +283,6 @@ def produce_dataset():
                                 prev_line.append('\n')
                                 out_file.writelines(prev_line)
                             prev_line = val
-                ''''
                 # open the file in read mode
                 with open(file_path, 'r') as input_file:
                 
