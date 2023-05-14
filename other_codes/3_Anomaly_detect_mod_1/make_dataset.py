@@ -1,5 +1,5 @@
 import os
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 Working_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1'
 Telemetry_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1/Telemetry'
 Dataset_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1/Dataset'
@@ -294,22 +294,24 @@ def produce_dataset():
                 '''
 
 #create_datasets()
-produce_dataset()
-'''
+#produce_dataset()
+
+for output_file_name in os.listdir(Telemetry_dir):
     if main_panel in output_file_name and (output_file_name == 'output_+X_44.txt'):
             list = file_to_list(output_file_name)
             #list1 = make_const_sensor_anomaly(list, 30, len(list)-30, value=35)
             #list1 = shift_temp(list, -1, 10)
             #list1 = bump_temp(list, -1, 10, 10, 80)
             list1 = [i for i in range(len(list))]
-            list1 = corrupt_clock(list1, 2)
-            plt.plot(list1, list, label='Modified', c="g")
-            plt.xlabel('faster time', fontsize=15)
+            list1 = corrupt_clock(list1, 1)
+            my_list = [0] * 30 + list[:len(list) - 30]
+            plt.plot(list1, my_list, label='Modified', c="g")
+            plt.xlabel('Shifted time', fontsize=15)
             #y = [0 for i in range(len(list))]
             #plt.plot(list1, y, c="black")
             plt.legend()
             plt.show()
-'''
+
 '''
 lengths = [[44, 103], [163, 103], [286, 207], [529, 207], [775, 206], [1042, 103], [1187, 208]]
 os.chdir(Dataset_dir)
