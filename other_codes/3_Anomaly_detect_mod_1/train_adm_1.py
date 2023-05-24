@@ -6,10 +6,11 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 sys.path.append('/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes')
 from other_codes.tfl_converter_tools import *
+from normalize_dataset import *
 Dataset_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1/Dataset_2'
 Working_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1'
 
-training_dataset = 'training_dataset_1_3.txt'
+training_dataset = 'training_dataset_1_2_n.txt'
 
 # Print versions
 print('Numpy ' + np.__version__)
@@ -17,10 +18,10 @@ print('TensorFlow ' + tf.__version__)
 print('Keras ' + tf.keras.__version__)
 
 # Settings
-plot_ds = True
+#plot_ds = True
 nsamples = 13651     # Number of samples to use as a dataset
 val_ratio = 0.3     # Fraction of samples that should be held for validation set
-model_name = 'adm_14'  # Will be given .h5 suffix
+model_name = 'adm_13_n'  # Will be given .h5 suffix
 N_i = 60 # number of input neurons
 H1 = 32 # number of neurons on the hidden layers
 H2 = 32 # number of neurons on the hidden layers
@@ -81,6 +82,12 @@ plt.title('Training and validation loss')
 plt.legend()
 plt.show()
 
+
+
+#SAVE MODEL
+os.chdir(Working_dir)
+model.save(model_name+'.h5')
+
 ''' *******************   TESTING   ********************** '''
 x_test_rows = []
 y_test_rows = []
@@ -88,7 +95,8 @@ os.chdir(Dataset_dir)
 with open("dataset_1187_1_new.txt", "r") as f:
     for line in f:
         # Split the line into values
-        values = line.strip().split()
+        values_nn = line.strip().split()
+        values = normalize_list(values_nn, normal_min, normal_max, already_normalised_indx)
         if len(values) == N_i + N_o:
             # Extract the input and output values
             x = [float(v) for v in values[2:]]
@@ -116,12 +124,6 @@ ax = fig.add_subplot(111)
 plt.clf()
 plt.title("Comparison of predictions to actual values output 2")
 plt.plot(x_time, np.array(y_test_rows)[:, 0], 'b', label='Actual values')
-plt.plot(x_time, predictions[:, 0], 'r', label='Model predictions')
+plt.plot(x_time, denormalise_array(predictions[:, 0], normal_min, normal_max, None), 'r', label='Model predictions')
 plt.legend()
 plt.show()
-
-
-
-#SAVE MODEL
-os.chdir(Working_dir)
-model.save(model_name+'.h5')

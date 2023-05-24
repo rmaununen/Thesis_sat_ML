@@ -6,6 +6,7 @@ import math
 import matplotlib.pyplot as plt
 from other_codes.tfl_converter_tools import *
 from test_adm_input import *
+from normalize_dataset import *
 import os
 import re
 Working_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1'
@@ -18,7 +19,8 @@ convert = False
 gradcam = False
 plot_tests = True
 make_report = True
-filter_thrshld = True
+filter_thrshld = False
+limit_val = True
 N_i = 60
 N_o = 2
 
@@ -69,6 +71,7 @@ for test_file in os.listdir(Dataset_dir):
         for line in f:
             # Split the line into values
             values = line.strip().split()
+            values = normalize_list(values, normal_min, normal_max, already_normalised_indx)
             if len(values) == N_i + 2:
                 # Extract the input and output values
                 x = [float(v) for v in values[N_o:]]
@@ -79,20 +82,33 @@ for test_file in os.listdir(Dataset_dir):
                 y = float(values[1])
                 y_test_rows.append(y)
                 y0 = float(values[0])
-                y_test_rows0.append(y0)
+                y_test_rows0.append(denormalize_value(y0, normal_min, normal_max))
 
     predictions = model.predict(np.array(x_test_rows))
     predictions0 = predictions[:, 0]
+    #print('1:       ', predictions0)
+    predictions0 = denormalise_array(predictions0, normal_min, normal_max, None)
+    #print('2:       ', predictions0)
     predictions1 = predictions[:, 1]
     pred1_lst0 = predictions1.flatten().tolist()
     pred1_lst = []
-    for p in pred1_lst0:
-        if p< threshold_out:
-            pred1_lst.append(0)
+    if filter_thrshld:
+        for p in pred1_lst0:
+            if p < threshold_out:
+                pred1_lst.append(0)
+            else:
+                pred1_lst.append(1)
+    else:
+        if limit_val:
+            for p in pred1_lst0:
+                if p < 0:
+                    pred1_lst.append(0)
+                elif p > 1:
+                    pred1_lst.append(1)
+                else:
+                    pred1_lst.append(p)
         else:
-            pred1_lst.append(1)
-    if not filter_thrshld:
-        pred1_lst = pred1_lst0
+            pred1_lst = pred1_lst0
     x_time = []
     t = 0
     for i in range(len(y_test_rows)):
