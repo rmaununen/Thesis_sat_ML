@@ -10,7 +10,7 @@ from normalize_dataset import *
 Dataset_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1/Dataset_2'
 Working_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/3_Anomaly_detect_mod_1'
 
-training_dataset = 'training_dataset_1_2_n.txt'
+training_dataset = 'training_dataset_1_2_n_d.txt'
 
 # Print versions
 print('Numpy ' + np.__version__)
@@ -21,12 +21,12 @@ print('Keras ' + tf.keras.__version__)
 #plot_ds = True
 nsamples = 13651     # Number of samples to use as a dataset
 val_ratio = 0.3     # Fraction of samples that should be held for validation set
-model_name = 'adm_13_n'  # Will be given .h5 suffix
+model_name = 'adm_13_n_d'  # Will be given .h5 suffix
 N_i = 60 # number of input neurons
 H1 = 32 # number of neurons on the hidden layers
 H2 = 32 # number of neurons on the hidden layers
 H3 = 32 # number of neurons on the hidden layers
-N_o = 2 # number of output neurons
+N_o = 3 # number of output neurons
 nepochs = 400
 sbatch = 100
 
@@ -97,10 +97,10 @@ with open("dataset_1187_1_new.txt", "r") as f:
         # Split the line into values
         values_nn = line.strip().split()
         values = normalize_list(values_nn, normal_min, normal_max, already_normalised_indx)
-        if len(values) == N_i + N_o:
+        if len(values) == N_i + N_o-1:
             # Extract the input and output values
-            x = [float(v) for v in values[2:]]
-            y = [float(v) for v in values[0:2]]
+            x = [float(v) for v in values[N_o:]]
+            y = [float(v) for v in values[0:N_o]]
             x_test_rows.append(x)
             y_test_rows.append(y)
 
@@ -114,7 +114,7 @@ fig = plt.figure()
 ax = fig.add_subplot(111)
 plt.clf()
 plt.title("Comparison of predictions to actual values output 1")
-plt.plot(x_time, np.array(y_test_rows)[:, 1], 'b', label='Actual values')
+plt.plot(x_time, np.array(y_test_rows)[:, 1+1], 'b', label='Actual values')
 plt.plot(x_time, predictions[:, 1], 'r', label='Model predictions')
 plt.legend()
 plt.show()
@@ -124,6 +124,6 @@ ax = fig.add_subplot(111)
 plt.clf()
 plt.title("Comparison of predictions to actual values output 2")
 plt.plot(x_time, np.array(y_test_rows)[:, 0], 'b', label='Actual values')
-plt.plot(x_time, denormalise_array(predictions[:, 0], normal_min, normal_max, None), 'r', label='Model predictions')
+plt.plot(x_time, denormalise_array(predictions[:, 0+1], normal_min, normal_max, None), 'r', label='Model predictions')
 plt.legend()
 plt.show()

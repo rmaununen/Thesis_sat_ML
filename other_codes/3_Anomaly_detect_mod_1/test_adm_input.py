@@ -7,17 +7,17 @@ This is the input file to test an anomaly detecting model (TF, NOT TFL)
 import datetime
 
 #REPORT PARAMETERS
-id = '1.3.1.n' #test ID that will be printed in the report name header
+id = '1.3.1.n.d' #test ID that will be printed in the report name header
 #report_directory = "/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/Test_TFL_on_MSP"
 
 #MODEL PARAMETERS
 #model_directory = "/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/2_Predicting_therm_model_1"
 threshold_out = 0.15
-model_name = f'adm_13_n.h  (No threshold. follows anomalies. value limits 1/0 applied. Normalization applied)' #(WITH THRESHOLD OUTPUT CLASSIFICATION {threshold_out}) same as adm_13 but trained not to follow anomalies'
-tf_model_name = 'adm_13_n'  #The existing model
+model_name = f'adm_13_n_d.h  (No threshold. follows anomalies. value limits 1/0 applied. Normalization applied. Slope output panel 1 added.)' #(WITH THRESHOLD OUTPUT CLASSIFICATION {threshold_out}) same as adm_13 but trained not to follow anomalies'
+tf_model_name = 'adm_13_n_d'  #The existing model
 
 model_type = 'MLP'
-model_desc = '60x32x32x32x2 MLP to detect based on the previous 20 points from 3 panels, and predict the next point on panel 1. Tested on previously unseen data.'
+model_desc = '60x32x32x32x3 MLP to detect based on the previous 20 points from 3 panels, and predict the next point on panel 1 and estimate panel 1 slope. Tested on previously unseen data.'
 model_size = 'NA'
 n_points_inp = 60
 
@@ -29,4 +29,4 @@ n_points_inp = 60
 #DATETIME PARAMETERS
 now = datetime.datetime.now()
 formatted_date_time = now.strftime("%d/%m/%Y %H:%M")
-date_time = '16.05.2023'#formatted_date_time #Change this if you want the time to be something else
+date_time = '19.05.2023'#formatted_date_time #Change this if you want the time to be something else

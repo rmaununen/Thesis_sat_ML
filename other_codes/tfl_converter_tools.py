@@ -92,8 +92,8 @@ def read_ptm_dataset(N, N_o, filename):
       values = line.strip().split()
       if len(values) == N + N_o:
         # Extract the input and output values
-        x = [float(v) for v in values[2:]] #values[:-1]]
-        y = [float(v) for v in values[0:2]]
+        x = [float(v) for v in values[N_o:]] #values[:-1]]
+        y = [float(v) for v in values[0:N_o]]
         x_rows.append(x)
         y_rows.append(y)
       else:

@@ -85,11 +85,11 @@ for test_file in os.listdir(Dataset_dir):
                 y_test_rows0.append(denormalize_value(y0, normal_min, normal_max))
 
     predictions = model.predict(np.array(x_test_rows))
-    predictions0 = predictions[:, 0]
+    predictions0 = predictions[:, 0+1] #CHANGED TEMPORARILY
     #print('1:       ', predictions0)
     predictions0 = denormalise_array(predictions0, normal_min, normal_max, None)
     #print('2:       ', predictions0)
-    predictions1 = predictions[:, 1]
+    predictions1 = predictions[:, 1+1] #CHANGED TEMPORARILY
     pred1_lst0 = predictions1.flatten().tolist()
     pred1_lst = []
     if filter_thrshld:
