@@ -97,7 +97,7 @@ def read_ptm_dataset(N, N_o, filename):
         x_rows.append(x)
         y_rows.append(y)
       else:
-        print('Warning: length of a row is not', N + 1, '. Counted is', len(values))
+        print('Warning: length of a row is not', N + N_o, '. Counted is', len(values))
     # Shuffle
     # Combine x and y into a list of tuples
     xy_pairs = list(zip(x_rows, y_rows))

@@ -72,7 +72,7 @@ void setup() {
   }
   UART_write(uart, "Model data size has been received on MSP\n", 41);
 
-  // Receive the model data size through UART
+  // Receive the model input size through UART
 
   bool inp_size_received = false;
   //char readSize[32];

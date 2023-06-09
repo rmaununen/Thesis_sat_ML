@@ -67,3 +67,18 @@ def denormalise_array (in_array, normal_min, normal_max, already_normalised_indx
 def denormalize_value (in_value, normal_min, normal_max):
     denormal_v = round((in_value * (normal_max - normal_min)) + normal_min, 2)
     return denormal_v
+
+def telemetry_to_str_list(file_name, directory): #INPUT IS TELEMETRY FILE (SINGLE COLUMN)
+    current_working_directory = os.getcwd()
+    os.chdir(directory)
+    # Read the values from the file into a list
+    values = []
+    with open(file_name, "r") as f:
+        for line in f:
+            values.append(line.strip())
+    os.chdir(current_working_directory)
+    return values
+
+def str_to_float_list(list):
+    out_list = [float(l) for l in list]
+    return out_list

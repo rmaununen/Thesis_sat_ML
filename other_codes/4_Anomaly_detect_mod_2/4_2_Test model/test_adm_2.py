@@ -14,6 +14,7 @@ Working_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Ano
 Dataset_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/Dataset'
 report_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/4_2_Test model/TF_test_report'
 Training_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/4_1_Train model'
+Time_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/Clock_telemetry'
 print(os.getcwd())
 
 convert = False
@@ -22,8 +23,8 @@ plot_tests = True
 make_report = True
 filter_thrshld = False
 limit_val = True
-N_i = 60
-N_o = 3
+N_i = 81
+N_o = 2
 
 tflite_model_name = 'adm_2'  # Will be given .tflite suffix
 c_model_name = 'adm_2'       # Will be given .h suffix
@@ -35,13 +36,14 @@ print('Sum of absolute values of input layer weights per input layer neuron.')
 weights_abs_sum = []
 for i in range(len(Weights0)):
     weights_abs_sum.append(np.sum(np.abs(Weights0[i])))
+weights_abs_sum = [weights_abs_sum[0]] * 19 + weights_abs_sum
 weight_arr = np.array(weights_abs_sum)
 print(weight_arr)
 print('------------------------------')
 # Visualize the importance scores using a heatmap
 fig = plt.figure()
 ax = fig.add_subplot(111)
-plt.imshow(weight_arr.reshape(3, 20), cmap='hot')
+plt.imshow(weight_arr.reshape(5, 20), cmap='hot')
 plt.title(f'Sum of abs. weights per input layer neuron. {tf_model_name}')
 plt.colorbar()
 plt.show()
@@ -77,20 +79,20 @@ for test_file in os.listdir(Dataset_dir):
                 # Extract the input and output values
                 x = [float(v) for v in values[N_o:]]
                 x_test_rows.append(x)
-                x_test_dat_1.append(x[19])
-                x_test_dat_2.append(x[39])
-                x_test_dat_3.append(x[59])
-                y = float(values[2])
+                x_test_dat_1.append(x[40])
+                x_test_dat_2.append(x[60])
+                x_test_dat_3.append(x[80])
+                y = float(values[1]) #ANOMALY STATUS
                 y_test_rows.append(y)
-                y0 = float(values[1])
+                y0 = float(values[0]) #PREDICTION
                 y_test_rows0.append(denormalize_value(y0, normal_min, normal_max))
 
     predictions = model.predict(np.array(x_test_rows))
-    predictions0 = predictions[:, 0+1] #CHANGED TEMPORARILY
+    predictions0 = predictions[:, 0] #CHANGED TEMPORARILY  #PREDICTION
     #print('1:       ', predictions0)
     predictions0 = denormalise_array(predictions0, normal_min, normal_max, None)
     #print('2:       ', predictions0)
-    predictions1 = predictions[:, 1+1] #CHANGED TEMPORARILY
+    predictions1 = predictions[:, 1] #CHANGED TEMPORARILY   #ANOMALY STATUS
     pred1_lst0 = predictions1.flatten().tolist()
     pred1_lst = []
     if filter_thrshld:
@@ -110,11 +112,18 @@ for test_file in os.listdir(Dataset_dir):
                     pred1_lst.append(p)
         else:
             pred1_lst = pred1_lst0
+    #TIME
     x_time = []
     t = 0
     for i in range(len(y_test_rows)):
         x_time.append(t)
         t+=1
+    #TIME WITH REFERENCE
+    x_time_o = telemetry_to_str_list('clock_1187.txt', Time_dir)
+    x_time_o = str_to_float_list(x_time_o)[20:-1]
+
+    x_time = range(len(x_time_o))
+
     if ('1187' in test_file):
         #add up all model inference results for later acuracy analysis
         all_act += y_test_rows
@@ -130,6 +139,10 @@ for test_file in os.listdir(Dataset_dir):
         plt.title(f'Actual vs model {tf_model_name}, {test_file}')
         plt.plot(x_time, y_test_rows, 'b', linewidth=3, label='Actual anomaly label')
         plt.plot(x_time, pred1_lst, 'r', label='Model output')
+        #for time:
+        plt.xticks(x_time, [int(t) for t in x_time_o])
+        plt.locator_params(axis='x', nbins=20)
+
         plt.legend()
         plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
         plt.minorticks_on()
@@ -149,6 +162,10 @@ for test_file in os.listdir(Dataset_dir):
         plt.plot(x_time, x_test_dat_1, 'b', label='Panel 1 (+X)')
         plt.plot(x_time, x_test_dat_2, 'r', label='Panel 2 (-X)')
         plt.plot(x_time, x_test_dat_3, 'g', label='Panel 3 (+Y)')
+        # for time:
+        plt.xticks(x_time, [int(t) for t in x_time_o])
+        plt.locator_params(axis='x', nbins=20)
+
         plt.legend()
         plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
         plt.minorticks_on()
@@ -165,6 +182,10 @@ for test_file in os.listdir(Dataset_dir):
         plt.title(f'Actual vs model prediction {tf_model_name}, {test_file}')
         plt.plot(x_time, y_test_rows0, 'b', linewidth=3, label='Actual sensor panel 1')
         plt.plot(x_time, predictions0, 'r', label='Model prediction')
+        # for time:
+        plt.xticks(x_time, [int(t) for t in x_time_o])
+        plt.locator_params(axis='x', nbins=20)
+
         plt.legend()
         plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
         plt.minorticks_on()
