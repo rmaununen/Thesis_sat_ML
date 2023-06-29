@@ -7,12 +7,12 @@ import matplotlib.pyplot as plt
 sys.path.append('/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes')
 from other_codes.tfl_converter_tools import *
 sys.path.append('/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/4_0_Produce_dataset')
-from dataset_functions import *
+#from dataset_functions import *
 
 Dataset_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/Dataset'
 Working_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/4_1_Train model'
 
-training_dataset = 'training_dataset_2_4.txt'
+training_dataset = 'training_dataset_2_7_b.txt'
 
 # Print versions
 print('Numpy ' + np.__version__)
@@ -21,9 +21,9 @@ print('Keras ' + tf.keras.__version__)
 
 # Settings
 #plot_ds = True
-nsamples = 33300     # Number of samples to use as a dataset
+nsamples = 7839     # Number of samples to use as a dataset
 val_ratio = 0.3     # Fraction of samples that should be held for validation set
-model_name = 'adm_2_4'  # Will be given .h5 suffix
+model_name = 'adm_2_7_b'  # Will be given .h5 suffix
 N_i = 83 # number of input neurons
 H1 = 32 # number of neurons on the hidden layers
 H2 = 32 # number of neurons on the hidden layers
