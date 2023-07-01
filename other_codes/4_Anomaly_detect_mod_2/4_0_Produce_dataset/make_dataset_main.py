@@ -8,8 +8,14 @@ Telemetry_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_A
 Dataset_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/Dataset'
 Time_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/Clock_telemetry'
 Output_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/4_1_Train model'
-main_panel = '+X'
+#main_panel = '+X'
 
+
+make_tel = False
+make_time = False
+make_sets = True
+produce = True
+balance = True
 test_anomaly_functions = False
 
 single_panel = False
@@ -20,17 +26,19 @@ t_a_const = False
 t_a_shift = False
 t_a_bump = False
 ind = 0
-n_anomaly_files = 23
+n_anomaly_files = 32
 
 normal_min = -40
 normal_max = 50
 
-training_dataset_name = 'training_dataset_2_7.txt'
+N_series = 20
+
+training_dataset_name = 'training_dataset_2_9.txt'
 
 '''************   FUNCTION TO CONVERT TELEMETRY FILES (with and without anomalies) TO A (part of a) DATASET  ************'''
 def telemetry_files_to_dataset(N, filenames, out_file_name, directory, normal_min, normal_max):
     # N is the length of each panel time series
-    filename_1, filename_2, filename_3, filename_4 = filenames[0], filenames[1], filenames[2], filenames[3]
+    filename_1, filename_2, filename_3, filename_4, filename_t = filenames[0], filenames[1], filenames[2], filenames[3], filenames[4]
     # Create a new file for the concatenated sequences
     os.chdir(directory)
     with open(out_file_name, "w") as output_file:
@@ -38,7 +46,8 @@ def telemetry_files_to_dataset(N, filenames, out_file_name, directory, normal_mi
         values1 = telemetry_to_str_list(filename_1, Telemetry_dir)
         values2 = telemetry_to_str_list(filename_2, Telemetry_dir)
         values3 = telemetry_to_str_list(filename_3, Telemetry_dir)
-        time_series = telemetry_to_str_list(filename_4, Time_dir)
+        values4 = telemetry_to_str_list(filename_4, Telemetry_dir)
+        time_series = telemetry_to_str_list(filename_t, Time_dir)
 
         #Make all possible series of N consecutive points
         for i in range(len(values1) - (N+1)):
@@ -46,41 +55,49 @@ def telemetry_files_to_dataset(N, filenames, out_file_name, directory, normal_mi
             sequence1 = values1[i:i + N]
             sequence2 = values2[i:i + N]
             sequence3 = values3[i:i + N]
+            sequence4 = values4[i:i + N]
             sequencet = time_series[i:i + N]
 
             # ADD NEXT POINT PREDICTION OUTPUT
             sequence_p1 = [str(values1[i + N + 1])]
             sequence_p2 = [str(values2[i + N + 1])]
             sequence_p3 = [str(values3[i + N + 1])]
+            sequence_p4 = [str(values4[i + N + 1])]
 
             # ADD AMOMALY PROBABILITY OUTPUT
             sequence_a1 = get_current_anomaly_status(sequence1)
             sequence_a2 = get_current_anomaly_status(sequence2)
             sequence_a3 = get_current_anomaly_status(sequence3)
+            sequence_a4 = get_current_anomaly_status(sequence4)
 
             # Remove the 'a' labels from data
             sequence1 = remove_anomaly_labels(sequence1)
             sequence2 = remove_anomaly_labels(sequence2)
             sequence3 = remove_anomaly_labels(sequence3)
+            sequence4 = remove_anomaly_labels(sequence4)
             sequence_p1 = remove_anomaly_labels(sequence_p1)
             sequence_p2 = remove_anomaly_labels(sequence_p2)
             sequence_p3 = remove_anomaly_labels(sequence_p3)
+            sequence_p4 = remove_anomaly_labels(sequence_p4)
 
             # Normalize lists that need to be normalized
             sequence1 = normalize_list(sequence1, normal_min, normal_max, None)
             sequence2 = normalize_list(sequence2, normal_min, normal_max, None)
             sequence3 = normalize_list(sequence3, normal_min, normal_max, None)
+            sequence4 = normalize_list(sequence4, normal_min, normal_max, None)
             sequence_p1 = normalize_list(sequence_p1, normal_min, normal_max, None)
             sequence_p2 = normalize_list(sequence_p2, normal_min, normal_max, None)
             sequence_p3 = normalize_list(sequence_p3, normal_min, normal_max, None)
-            sequencet = normalize_list(sequencet, 0, 100, None)
+            sequence_p4 = normalize_list(sequence_p4, normal_min, normal_max, None)
+            sequencet = [normalize_list(sequencet, 0, 100, None)[-1]] #<-Only the last time point is taken
 
             # ADD SENSOR DATA SLOPE OUTPUT
             sequence_s1 = get_current_sensor_slope(sequence1)
             sequence_s2 = get_current_sensor_slope(sequence2)
             sequence_s3 = get_current_sensor_slope(sequence3)
+            sequence_s4 = get_current_sensor_slope(sequence3)
 
-            sequence = sequence_a1 + sequence_a2 + sequence_a3 + sequence_p1 + sequence_p2 + sequence_p3 + sequence_s1 + sequence_s2 + sequence_s3 + sequencet + sequence1 + sequence2 + sequence3
+            sequence = sequence_a1 + sequence_a2 + sequence_a3 + sequence_a4 + sequence_p1 + sequence_p2 + sequence_p3 + sequence_p4 + sequence_s1 + sequence_s2 + sequence_s3 + sequence_s4 + sequencet + sequence1 + sequence2 + sequence3 + sequence4
             output_file.write(" ".join(str(v) for v in sequence) + "\n")
 
 
@@ -106,6 +123,7 @@ def make_telemetry_files_with_anomalies(start_ind):
         file1 = ''  # +X
         file2 = ''  # -X
         file3 = ''  # +Y
+        file4 = ''  # -Y
         for fi in matching_files:
             if '+X' in fi:
                 file1 = fi
@@ -115,16 +133,11 @@ def make_telemetry_files_with_anomalies(start_ind):
         for fi in matching_files:
             if '+Y' in fi:
                 file3 = fi
+        for fi in matching_files:
+            if '-Y' in fi:
+                file4 = fi
 
         ############## FOR MULTIPLE PANELS ########################################################
-
-        def choose_two_items(items):
-            chosen_items = random.sample(items, 2)
-            return chosen_items[0], chosen_items[1]
-
-        def choose_one_item(items):
-            chosen_items = random.sample(items, 1)
-            return chosen_items[0]
 
         def random_reorder(input_list):
             output_list = list(input_list)  # Create a copy of the input list
@@ -142,7 +155,7 @@ def make_telemetry_files_with_anomalies(start_ind):
             return a
         #Spikes
         #1 random panel
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -153,11 +166,13 @@ def make_telemetry_files_with_anomalies(start_ind):
         list1 = make_const_sensor_anomaly(fil_lst, k, n, round(value, 2))
         list2 = str_to_float_list(telemetry_to_str_list(file2r, Telemetry_dir))
         list3 = str_to_float_list(telemetry_to_str_list(file3r, Telemetry_dir))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         #2 random panels together same height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -171,11 +186,13 @@ def make_telemetry_files_with_anomalies(start_ind):
         fil_lst2 = str_to_float_list(fil_lst2)
         list2 = make_const_sensor_anomaly(fil_lst2, k, n, round(value, 2))
         list3 = str_to_float_list(telemetry_to_str_list(file3r, Telemetry_dir))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         #2 random panels together different height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -188,14 +205,16 @@ def make_telemetry_files_with_anomalies(start_ind):
         fil_lst2 = telemetry_to_str_list(file2r, Telemetry_dir)
         fil_lst2 = str_to_float_list(fil_lst2)
         a = choose_dir()
-        value = fil_lst[k] + a * random.randint(10, 30)
+        value = fil_lst2[k] + a * random.randint(10, 30)
         list2 = make_const_sensor_anomaly(fil_lst2, k, n, round(value, 2))
         list3 = str_to_float_list(telemetry_to_str_list(file3r, Telemetry_dir))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
-        #3 panels together same height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        #3 random panels together same height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -212,11 +231,13 @@ def make_telemetry_files_with_anomalies(start_ind):
         fil_lst3 = telemetry_to_str_list(file3r, Telemetry_dir)
         fil_lst3 = str_to_float_list(fil_lst3)
         list3 = make_const_sensor_anomaly(fil_lst3, k, n, round(value, 2))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
-        #3 panels together different height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        #3 random panels together different height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -229,21 +250,81 @@ def make_telemetry_files_with_anomalies(start_ind):
         fil_lst2 = telemetry_to_str_list(file2r, Telemetry_dir)
         fil_lst2 = str_to_float_list(fil_lst2)
         a = choose_dir()
-        value = fil_lst[k] + a * random.randint(10, 30)
+        value = fil_lst2[k] + a * random.randint(10, 30)
         list2 = make_const_sensor_anomaly(fil_lst2, k, n, round(value, 2))
         ######
         fil_lst3 = telemetry_to_str_list(file3r, Telemetry_dir)
         fil_lst3 = str_to_float_list(fil_lst3)
         a = choose_dir()
-        value = fil_lst[k] + a * random.randint(10, 30)
+        value = fil_lst3[k] + a * random.randint(10, 30)
         list3 = make_const_sensor_anomaly(fil_lst3, k, n, round(value, 2))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        # 4 panels together same height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
+        ind += 1
+        fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
+        fil_lst = str_to_float_list(fil_lst)
+        k = random.randint(20, len(fil_lst) - 3)
+        n = random.randint(1, 2)
+        a = choose_dir()
+        value = fil_lst[k] + a * random.randint(10, 30)
+        list1 = make_const_sensor_anomaly(fil_lst, k, n, round(value, 2))
+        ######
+        fil_lst2 = telemetry_to_str_list(file2r, Telemetry_dir)
+        fil_lst2 = str_to_float_list(fil_lst2)
+        list2 = make_const_sensor_anomaly(fil_lst2, k, n, round(value, 2))
+        ######
+        fil_lst3 = telemetry_to_str_list(file3r, Telemetry_dir)
+        fil_lst3 = str_to_float_list(fil_lst3)
+        list3 = make_const_sensor_anomaly(fil_lst3, k, n, round(value, 2))
+        ######
+        fil_lst4 = telemetry_to_str_list(file4r, Telemetry_dir)
+        fil_lst4 = str_to_float_list(fil_lst4)
+        list4 = make_const_sensor_anomaly(fil_lst4, k, n, round(value, 2))
+        spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        # 4 panels together different height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
+        ind += 1
+        fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
+        fil_lst = str_to_float_list(fil_lst)
+        k = random.randint(20, len(fil_lst) - 3)
+        n = random.randint(1, 2)
+        a = choose_dir()
+        value = fil_lst[k] + a * random.randint(10, 30)
+        list1 = make_const_sensor_anomaly(fil_lst, k, n, round(value, 2))
+        ######
+        fil_lst2 = telemetry_to_str_list(file2r, Telemetry_dir)
+        fil_lst2 = str_to_float_list(fil_lst2)
+        a = choose_dir()
+        value = fil_lst2[k] + a * random.randint(10, 30)
+        list2 = make_const_sensor_anomaly(fil_lst2, k, n, round(value, 2))
+        ######
+        fil_lst3 = telemetry_to_str_list(file3r, Telemetry_dir)
+        fil_lst3 = str_to_float_list(fil_lst3)
+        a = choose_dir()
+        value = fil_lst3[k] + a * random.randint(10, 30)
+        list3 = make_const_sensor_anomaly(fil_lst3, k, n, round(value, 2))
+        ######
+        fil_lst4 = telemetry_to_str_list(file4r, Telemetry_dir)
+        fil_lst4 = str_to_float_list(fil_lst4)
+        a = choose_dir()
+        value = fil_lst4[k] + a * random.randint(10, 30)
+        list4 = make_const_sensor_anomaly(fil_lst4, k, n, round(value, 2))
+        spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
 
         # Constant with offset
         # 1 random panel
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -254,11 +335,13 @@ def make_telemetry_files_with_anomalies(start_ind):
         list1 = make_const_sensor_anomaly(fil_lst, k, n, round(value, 2))
         list2 = str_to_float_list(telemetry_to_str_list(file2r, Telemetry_dir))
         list3 = str_to_float_list(telemetry_to_str_list(file3r, Telemetry_dir))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         # 2 random panels together same height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -272,11 +355,13 @@ def make_telemetry_files_with_anomalies(start_ind):
         fil_lst2 = str_to_float_list(fil_lst2)
         list2 = make_const_sensor_anomaly(fil_lst2, k, n, round(value, 2))
         list3 = str_to_float_list(telemetry_to_str_list(file3r, Telemetry_dir))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         # 2 random panels together different height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -292,11 +377,13 @@ def make_telemetry_files_with_anomalies(start_ind):
         value = fil_lst[k] + a * random.randint(10, 30)
         list2 = make_const_sensor_anomaly(fil_lst2, k, n, round(value, 2))
         list3 = str_to_float_list(telemetry_to_str_list(file3r, Telemetry_dir))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
-        # 3 panels together same height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        # 3 random panels together same height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -308,20 +395,18 @@ def make_telemetry_files_with_anomalies(start_ind):
         ######
         fil_lst2 = telemetry_to_str_list(file2r, Telemetry_dir)
         fil_lst2 = str_to_float_list(fil_lst2)
-        #a = choose_dir()
-        #value = fil_lst[k] + a * random.randint(10, 30)
         list2 = make_const_sensor_anomaly(fil_lst2, k, n, round(value, 2))
         ######
         fil_lst3 = telemetry_to_str_list(file3r, Telemetry_dir)
         fil_lst3 = str_to_float_list(fil_lst3)
-        #a = choose_dir()
-        #value = fil_lst[k] + a * random.randint(10, 30)
         list3 = make_const_sensor_anomaly(fil_lst3, k, n, round(value, 2))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
-        # 3 panels together different height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        # 3 random panels together different height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -342,13 +427,73 @@ def make_telemetry_files_with_anomalies(start_ind):
         a = choose_dir()
         value = fil_lst[k] + a * random.randint(10, 30)
         list3 = make_const_sensor_anomaly(fil_lst3, k, n, round(value, 2))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        # 4 panels together same height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
+        ind += 1
+        fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
+        fil_lst = str_to_float_list(fil_lst)
+        n = random.randint(10, 30)
+        k = random.randint(20, len(fil_lst) - n)
+        a = choose_dir()
+        value = fil_lst[k] + a * random.randint(10, 30)
+        list1 = make_const_sensor_anomaly(fil_lst, k, n, round(value, 2))
+        ######
+        fil_lst2 = telemetry_to_str_list(file2r, Telemetry_dir)
+        fil_lst2 = str_to_float_list(fil_lst2)
+        list2 = make_const_sensor_anomaly(fil_lst2, k, n, round(value, 2))
+        ######
+        fil_lst3 = telemetry_to_str_list(file3r, Telemetry_dir)
+        fil_lst3 = str_to_float_list(fil_lst3)
+        list3 = make_const_sensor_anomaly(fil_lst3, k, n, round(value, 2))
+        ######
+        fil_lst4 = telemetry_to_str_list(file4r, Telemetry_dir)
+        fil_lst4 = str_to_float_list(fil_lst4)
+        list4 = make_const_sensor_anomaly(fil_lst4, k, n, round(value, 2))
+        spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        # 4 panels together different height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
+        ind += 1
+        fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
+        fil_lst = str_to_float_list(fil_lst)
+        n = random.randint(10, 30)
+        k = random.randint(20, len(fil_lst) - n)
+        a = choose_dir()
+        value = fil_lst[k] + a * random.randint(10, 30)
+        list1 = make_const_sensor_anomaly(fil_lst, k, n, round(value, 2))
+        ######
+        fil_lst2 = telemetry_to_str_list(file2r, Telemetry_dir)
+        fil_lst2 = str_to_float_list(fil_lst2)
+        a = choose_dir()
+        value = fil_lst[k] + a * random.randint(10, 30)
+        list2 = make_const_sensor_anomaly(fil_lst2, k, n, round(value, 2))
+        ######
+        fil_lst3 = telemetry_to_str_list(file3r, Telemetry_dir)
+        fil_lst3 = str_to_float_list(fil_lst3)
+        a = choose_dir()
+        value = fil_lst[k] + a * random.randint(10, 30)
+        list3 = make_const_sensor_anomaly(fil_lst3, k, n, round(value, 2))
+        ######
+        fil_lst4 = telemetry_to_str_list(file4r, Telemetry_dir)
+        fil_lst4 = str_to_float_list(fil_lst4)
+        a = choose_dir()
+        value = fil_lst[k] + a * random.randint(10, 30)
+        list4 = make_const_sensor_anomaly(fil_lst4, k, n, round(value, 2))
+        spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
 
         # Constant no offset, infinite length
         # 1 random panel
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -357,11 +502,13 @@ def make_telemetry_files_with_anomalies(start_ind):
         list1 = make_const_sensor_anomaly(fil_lst, k, n, None)
         list2 = str_to_float_list(telemetry_to_str_list(file2r, Telemetry_dir))
         list3 = str_to_float_list(telemetry_to_str_list(file3r, Telemetry_dir))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         # 2 random panels together same height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -373,11 +520,13 @@ def make_telemetry_files_with_anomalies(start_ind):
         fil_lst2 = str_to_float_list(fil_lst2)
         list2 = make_const_sensor_anomaly(fil_lst2, k, n, None)
         list3 = str_to_float_list(telemetry_to_str_list(file3r, Telemetry_dir))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
-        # 3 panels together same height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        # 3 random panels together same height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -392,13 +541,39 @@ def make_telemetry_files_with_anomalies(start_ind):
         fil_lst3 = telemetry_to_str_list(file3r, Telemetry_dir)
         fil_lst3 = str_to_float_list(fil_lst3)
         list3 = make_const_sensor_anomaly(fil_lst3, k, n, None)
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        # 4 panels together same height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
+        ind += 1
+        fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
+        fil_lst = str_to_float_list(fil_lst)
+        n = random.randint(10, 30)
+        k = len(fil_lst) - n
+        list1 = make_const_sensor_anomaly(fil_lst, k, n, None)
+        ######
+        fil_lst2 = telemetry_to_str_list(file2r, Telemetry_dir)
+        fil_lst2 = str_to_float_list(fil_lst2)
+        list2 = make_const_sensor_anomaly(fil_lst2, k, n, None)
+        ######
+        fil_lst3 = telemetry_to_str_list(file3r, Telemetry_dir)
+        fil_lst3 = str_to_float_list(fil_lst3)
+        list3 = make_const_sensor_anomaly(fil_lst3, k, n, None)
+        ######
+        fil_lst4 = telemetry_to_str_list(file4r, Telemetry_dir)
+        fil_lst4 = str_to_float_list(fil_lst4)
+        list4 = make_const_sensor_anomaly(fil_lst4, k, n, None)
+        spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
 
         # Temperature shift
         # 1 random panel
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -407,11 +582,13 @@ def make_telemetry_files_with_anomalies(start_ind):
         list1 = shift_temp(fil_lst, a, value)
         list2 = str_to_float_list(telemetry_to_str_list(file2r, Telemetry_dir))
         list3 = str_to_float_list(telemetry_to_str_list(file3r, Telemetry_dir))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         # 2 random panels together same height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -423,11 +600,13 @@ def make_telemetry_files_with_anomalies(start_ind):
         fil_lst2 = str_to_float_list(fil_lst2)
         list2 = shift_temp(fil_lst2, a, value)
         list3 = str_to_float_list(telemetry_to_str_list(file3r, Telemetry_dir))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         # 2 random panels together different height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -441,11 +620,13 @@ def make_telemetry_files_with_anomalies(start_ind):
         value = random.randint(10, 20)
         list2 = shift_temp(fil_lst2, a, value)
         list3 = str_to_float_list(telemetry_to_str_list(file3r, Telemetry_dir))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
-        # 3 panels together same height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        # 3 random panels together same height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -460,11 +641,13 @@ def make_telemetry_files_with_anomalies(start_ind):
         fil_lst3 = telemetry_to_str_list(file3r, Telemetry_dir)
         fil_lst3 = str_to_float_list(fil_lst3)
         list3 = shift_temp(fil_lst3, a, value)
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
-        # 3 panels together different height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        # 3 random panels together different height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -483,13 +666,69 @@ def make_telemetry_files_with_anomalies(start_ind):
         a = choose_dir()
         value = random.randint(10, 20)
         list3 = shift_temp(fil_lst3, a, value)
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        # 4 panels together same height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
+        ind += 1
+        fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
+        fil_lst = str_to_float_list(fil_lst)
+        a = choose_dir()
+        value = random.randint(10, 20)
+        list1 = shift_temp(fil_lst, a, value)
+        ######
+        fil_lst2 = telemetry_to_str_list(file2r, Telemetry_dir)
+        fil_lst2 = str_to_float_list(fil_lst2)
+        list2 = shift_temp(fil_lst2, a, value)
+        ######
+        fil_lst3 = telemetry_to_str_list(file3r, Telemetry_dir)
+        fil_lst3 = str_to_float_list(fil_lst3)
+        list3 = shift_temp(fil_lst3, a, value)
+        ######
+        fil_lst4 = telemetry_to_str_list(file4r, Telemetry_dir)
+        fil_lst4 = str_to_float_list(fil_lst4)
+        list4 = shift_temp(fil_lst4, a, value)
+        spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        # 4 panels together different height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
+        ind += 1
+        fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
+        fil_lst = str_to_float_list(fil_lst)
+        a = choose_dir()
+        value = random.randint(10, 20)
+        list1 = shift_temp(fil_lst, a, value)
+        ######
+        fil_lst2 = telemetry_to_str_list(file2r, Telemetry_dir)
+        fil_lst2 = str_to_float_list(fil_lst2)
+        a = choose_dir()
+        value = random.randint(10, 20)
+        list2 = shift_temp(fil_lst2, a, value)
+        ######
+        fil_lst3 = telemetry_to_str_list(file3r, Telemetry_dir)
+        fil_lst3 = str_to_float_list(fil_lst3)
+        a = choose_dir()
+        value = random.randint(10, 20)
+        list3 = shift_temp(fil_lst3, a, value)
+        ######
+        fil_lst4 = telemetry_to_str_list(file4r, Telemetry_dir)
+        fil_lst4 = str_to_float_list(fil_lst4)
+        a = choose_dir()
+        value = random.randint(10, 20)
+        list4 = shift_temp(fil_lst4, a, value)
+        spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
 
         # Temperature bump
         # 1 random panel
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -500,11 +739,13 @@ def make_telemetry_files_with_anomalies(start_ind):
         list1 = bump_temp(fil_lst, a, k, n, value)
         list2 = str_to_float_list(telemetry_to_str_list(file2r, Telemetry_dir))
         list3 = str_to_float_list(telemetry_to_str_list(file3r, Telemetry_dir))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         # 2 random panels together same height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -518,11 +759,13 @@ def make_telemetry_files_with_anomalies(start_ind):
         fil_lst2 = str_to_float_list(fil_lst2)
         list2 = bump_temp(fil_lst2, a, k, n, value)
         list3 = str_to_float_list(telemetry_to_str_list(file3r, Telemetry_dir))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         # 2 random panels together different height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -539,11 +782,13 @@ def make_telemetry_files_with_anomalies(start_ind):
         value = random.randint(80, 120)
         list2 = bump_temp(fil_lst2, a, k, n, value)
         list3 = str_to_float_list(telemetry_to_str_list(file3r, Telemetry_dir))
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
-        # 3 panels together same height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        # 3 random panels together same height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -560,11 +805,13 @@ def make_telemetry_files_with_anomalies(start_ind):
         fil_lst3 = telemetry_to_str_list(file3r, Telemetry_dir)
         fil_lst3 = str_to_float_list(fil_lst3)
         list3 = bump_temp(fil_lst3, a, k, n, value)
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
-        # 3 panels together different height
-        file1r, file2r, file3r = random_reorder([file1, file2, file3])
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        # 3 random panels together different height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
         ind += 1
         fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
         fil_lst = str_to_float_list(fil_lst)
@@ -587,9 +834,72 @@ def make_telemetry_files_with_anomalies(start_ind):
         n = random.randint(9, 17)
         value = random.randint(80, 120)
         list3 = bump_temp(fil_lst3, a, k, n, value)
+        list4 = str_to_float_list(telemetry_to_str_list(file4r, Telemetry_dir))
         spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
         spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        # 4 panels together same height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
+        ind += 1
+        fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
+        fil_lst = str_to_float_list(fil_lst)
+        a = choose_dir()
+        k = random.randint(10, len(fil_lst) - 17)
+        n = random.randint(9, 17)
+        value = random.randint(80, 120)
+        list1 = bump_temp(fil_lst, a, k, n, value)
+        ######
+        fil_lst2 = telemetry_to_str_list(file2r, Telemetry_dir)
+        fil_lst2 = str_to_float_list(fil_lst2)
+        list2 = bump_temp(fil_lst2, a, k, n, value)
+        ######
+        fil_lst3 = telemetry_to_str_list(file3r, Telemetry_dir)
+        fil_lst3 = str_to_float_list(fil_lst3)
+        list3 = bump_temp(fil_lst3, a, k, n, value)
+        ######
+        fil_lst4 = telemetry_to_str_list(file4r, Telemetry_dir)
+        fil_lst4 = str_to_float_list(fil_lst4)
+        list4 = bump_temp(fil_lst4, a, k, n, value)
+        spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        # 4 panels together different height
+        file1r, file2r, file3r, file4r = random_reorder([file1, file2, file3, file4])
+        ind += 1
+        fil_lst = telemetry_to_str_list(file1r, Telemetry_dir)
+        fil_lst = str_to_float_list(fil_lst)
+        a = choose_dir()
+        k = random.randint(10, len(fil_lst) - 17)
+        n = random.randint(9, 17)
+        value = random.randint(80, 120)
+        list1 = bump_temp(fil_lst, a, k, n, value)
+        ######
+        fil_lst2 = telemetry_to_str_list(file2r, Telemetry_dir)
+        fil_lst2 = str_to_float_list(fil_lst2)
+        a = choose_dir()
+        n = random.randint(9, 17)
+        value = random.randint(80, 120)
+        list2 = bump_temp(fil_lst2, a, k, n, value)
+        ######
+        fil_lst3 = telemetry_to_str_list(file3r, Telemetry_dir)
+        fil_lst3 = str_to_float_list(fil_lst3)
+        a = choose_dir()
+        n = random.randint(9, 17)
+        value = random.randint(80, 120)
+        list3 = bump_temp(fil_lst3, a, k, n, value)
+        ######
+        fil_lst4 = telemetry_to_str_list(file4r, Telemetry_dir)
+        fil_lst4 = str_to_float_list(fil_lst4)
+        a = choose_dir()
+        n = random.randint(9, 17)
+        value = random.randint(80, 120)
+        list4 = bump_temp(fil_lst4, a, k, n, value)
+        spike_file1 = list_to_telemetry_file(list1, file1r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file2 = list_to_telemetry_file(list2, file2r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file3 = list_to_telemetry_file(list3, file3r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
+        spike_file4 = list_to_telemetry_file(list4, file4r[:-4] + f'_a_{ind}.txt', Telemetry_dir)
 
         ############## FOR A SINGLE PANEL ########################################################
         if t_a_free:
@@ -693,7 +1003,8 @@ def make_telemetry_files_with_anomalies(start_ind):
                 fil_lst = bump_temp(fil_lst, a, random.randint(10, len(fil_lst)-17), random.randint(9, 17), random.randint(80, 120))
                 shift_file = list_to_telemetry_file(fil_lst, file1[:-4] + f'_a_{ind}.txt', Telemetry_dir)
 
-#make_telemetry_files_with_anomalies(ind)
+if make_tel:
+    make_telemetry_files_with_anomalies(ind)
 
 
 
@@ -746,7 +1057,8 @@ def make_time_series(Telemetry_dir, time_dir):
         time_series = time_series_from_telemetry(values)
         time_file = list_to_telemetry_file(time_series, f'clock_{t_part}.txt', time_dir)
 
-#make_time_series(Telemetry_dir, Time_dir)
+if make_time:
+    make_time_series(Telemetry_dir, Time_dir)
 
 '''************   FUNCTION TO MAKE INDIVIDUAL DATASETS FROM INDIVIDUAL TELEMETRY PARTS  ************'''
 def make_datasets(normal_min, normal_max):
@@ -761,6 +1073,7 @@ def make_datasets(normal_min, normal_max):
         file1 = ''  # +X
         file2 = ''  # -X
         file3 = ''  # +Y
+        file4 = ''  # -Y
         for fi in matching_files:
             if '+X' in fi:
                 file1 = fi
@@ -770,30 +1083,35 @@ def make_datasets(normal_min, normal_max):
         for fi in matching_files:
             if '+Y' in fi:
                 file3 = fi
+        for fi in matching_files:
+            if '-Y' in fi:
+                file4 = fi
 
         # make ANOMALY-FREE datasets
         ind = 0
-        file4 = f'clock_{t_part}.txt'
-        filenames = [file1, file2, file3, file4]
-        telemetry_files_to_dataset(20, filenames, f'dataset_{t_part}_{ind}', Dataset_dir, normal_min, normal_max)
+        filet = f'clock_{t_part}.txt'
+        filenames = [file1, file2, file3, file4, filet]
+        telemetry_files_to_dataset(N_series, filenames, f'dataset_{t_part}_{ind}', Dataset_dir, normal_min, normal_max)
 
         # make datasets WITH ANOMALIES
         if single_panel:
             for i in range(n_anomaly_files):
                 ind += 1
                 file1_a = file1[:-4] + f'_a_{ind}.txt'
-                filenames = [file1_a, file2, file3, file4]
-                telemetry_files_to_dataset(20, filenames, f'dataset_{t_part}_{ind}', Dataset_dir, normal_min, normal_max)
+                filenames = [file1_a, file2, file3, file4, filet]
+                telemetry_files_to_dataset(N_series, filenames, f'dataset_{t_part}_{ind}', Dataset_dir, normal_min, normal_max)
         else:
             for i in range(n_anomaly_files):
                 ind += 1
                 file1_a = file1[:-4] + f'_a_{ind}.txt'
                 file2_a = file2[:-4] + f'_a_{ind}.txt'
                 file3_a = file3[:-4] + f'_a_{ind}.txt'
-                filenames = [file1_a, file2_a, file3_a, file4]
-                telemetry_files_to_dataset(20, filenames, f'dataset_{t_part}_{ind}', Dataset_dir, normal_min, normal_max)
+                file4_a = file4[:-4] + f'_a_{ind}.txt'
+                filenames = [file1_a, file2_a, file3_a, file4_a, filet]
+                telemetry_files_to_dataset(N_series, filenames, f'dataset_{t_part}_{ind}', Dataset_dir, normal_min, normal_max)
 
-make_datasets(normal_min, normal_max)
+if make_sets:
+    make_datasets(normal_min, normal_max)
 
 
 '''************   FUNCTION TO COMBINE ALL DATASETS INTO ONE TRAINING DATASET  ************'''
@@ -810,7 +1128,8 @@ def produce_dataset(training_dataset_name):
                     # write the lines to the output file
                     output_file.writelines(lines)
 
-produce_dataset(training_dataset_name)
+if produce:
+    produce_dataset(training_dataset_name)
 
 
 #test_anomaly_functions = True
@@ -871,8 +1190,8 @@ def balance_dataset(dataset_name, dataset_dir):
             file.write(line + '\n')
 
 
-
-balance_dataset(training_dataset_name, Output_dir)
+if balance:
+    balance_dataset(training_dataset_name, Output_dir)
 
 '''
                     #FOR ANOMALLY FREE PREDICTIONS

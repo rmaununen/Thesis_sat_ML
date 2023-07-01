@@ -15,7 +15,11 @@ def make_const_sensor_anomaly(list, k, n, value=None): #INPUT LIST IS ANY TYPE
     list_out = []
     for l in list:
         list_out.append(str(l))
-    list_out[k:k + n] = [str(constant_value) + 'a'] * n
+    if n == 1:
+        labl = 'a'
+    else:
+        labl = 'b'
+    list_out[k:k + n] = [str(constant_value) + labl] * n
     return list_out #STRING
 
 
@@ -23,10 +27,10 @@ def shift_temp(list, dir, magnitude): #INPUT LIST IS ANY TYPE
     list_out = []
     if dir == 1: #dir 1 i up, 0 is down
         for v in list:
-            list_out.append(str(round((float(v)+magnitude), 2)) + 'a')
+            list_out.append(str(round((float(v)+magnitude), 2)) + 'c')
     else:
         for v in list:
-            list_out.append(str(round((float(v)-magnitude), 2)) + 'a')
+            list_out.append(str(round((float(v)-magnitude), 2)) + 'd')
     return list_out #STRING
 
 
@@ -45,7 +49,7 @@ def bump_temp(list, dir, k, n, peak_magn): #INPUT LIST IS ANY TYPE
             lst[i] -= bump[i - k]
     list_out = [str(round((l), 2)) for l in lst]
     for i in range(k, min(k + n, len(list_out))):
-        list_out[i] += 'a'
+        list_out[i] += 'e'
     return list_out #STRING
 
 
@@ -153,7 +157,7 @@ def list_to_telemetry_file(list, file, directory):
 '''************   FUNCTIONS TO HELP CONVERT TELEMETRY FILES (with and without anomalies) TO DATASETS  ************'''
 
 def get_current_anomaly_status(list): #INPUT VALUE IS STRING
-    if 'a' in list[-1]:
+    if any(char.isalpha() for char in str(list[-1])):
         out_list = ['1.0']
     else:
         out_list = ['0.0']
@@ -168,5 +172,5 @@ def get_current_sensor_slope(list):
 def remove_anomaly_labels(list):
     out_list = []
     for l in list:
-        out_list.append(l.replace('a', ''))
+        out_list.append(l.replace('a', '').replace('b', '').replace('c', '').replace('d', '').replace('e', ''))
     return out_list

@@ -12,7 +12,7 @@ sys.path.append('/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_A
 Dataset_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/Dataset'
 Working_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/4_1_Train model'
 
-training_dataset = 'training_dataset_2_7_b.txt'
+training_dataset = 'training_dataset_2_9_b.txt'
 
 # Print versions
 print('Numpy ' + np.__version__)
@@ -21,14 +21,14 @@ print('Keras ' + tf.keras.__version__)
 
 # Settings
 #plot_ds = True
-nsamples = 7839     # Number of samples to use as a dataset
+nsamples = 10718     # Number of samples to use as a dataset
 val_ratio = 0.3     # Fraction of samples that should be held for validation set
-model_name = 'adm_2_7_b'  # Will be given .h5 suffix
-N_i = 83 # number of input neurons
+model_name = 'adm_2_9_b'  # Will be given .h5 suffix
+N_i = 85 # number of input neurons
 H1 = 32 # number of neurons on the hidden layers
 H2 = 32 # number of neurons on the hidden layers
 H3 = 32 # number of neurons on the hidden layers
-N_o = 6 # number of output neurons
+N_o = 8 # number of output neurons
 nepochs = 400
 sbatch = 100
 normal_min, normal_max = -40, 50

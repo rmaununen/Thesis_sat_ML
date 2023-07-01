@@ -50,7 +50,7 @@ def denormalise_list (in_list, normal_min, normal_max, already_normalised_indx):
             out_list.append(v)
         else:
             denormal_v = round((float(v) * (normal_max - normal_min)) + normal_min, 2)
-            out_list.append(str(denormal_v))
+            out_list.append(float(denormal_v))
     return out_list
 
 def denormalise_array (in_array, normal_min, normal_max, already_normalised_indx):
