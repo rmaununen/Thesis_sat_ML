@@ -27,6 +27,9 @@ model_size = 'NA'
 N_i = 85
 N_o = 8
 N_series = 20 #Number of temperature points used
+normal_min = -40
+normal_max = 50
+
 
 #FUNCTIONS TO BE EXECUTED
 convert = True
