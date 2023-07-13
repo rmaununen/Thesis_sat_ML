@@ -64,7 +64,7 @@ model.summary()
 
 # Add optimizer, loss function, and metrics to model and compile it
 model.compile(optimizer='rmsprop', loss='mae', metrics=['mae'])
-# 4_1_Train model
+# 5_1_Train model
 history = model.fit(x_train,
                     y_train,
                     epochs=1200,

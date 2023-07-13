@@ -6,10 +6,10 @@ This is the input file to test an anomaly detecting model (TF, NOT TFL)
 '''
 
 #DIRECTORIES
-Working_dir1 = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/4_2_Test model'
+Working_dir1 = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/5_2_Test model'
 Dataset_dir1 = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/Dataset'
-Report_dir1 = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/4_2_Test model/TF_test_report'
-Training_dir1 = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/4_1_Train model'
+Report_dir1 = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/5_2_Test model/TF_test_report'
+Training_dir1 = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/5_1_Train model'
 Time_dir1 = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anomaly_detect_mod_2/Clock_telemetry'
 Model_dir1 = Training_dir1
 

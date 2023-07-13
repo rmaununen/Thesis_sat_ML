@@ -113,10 +113,11 @@ print('Current time:', (time_now-time_start)/1000, '[s]')
 all_diff = np.array([])
 all_act = []
 all_mod = []
+counter = 0
 while reading:
     open_file = True
     for dataset_file_name in os.listdir(dataset_dir):
-        if (not single_sensor) and (dataset_file_name.startswith("dataset_")) and ('1187' in dataset_file_name):
+        if (not single_series) and (dataset_file_name.startswith("dataset_")) and ('1187' in dataset_file_name):
             # Check if there are specific files to include in testing
             if len(individual_files) != 0:
                 open_file = False
@@ -390,7 +391,8 @@ while reading:
                         plt.clf()
 
         #****************************************   Old code for ptm model   ******************************************
-        elif single_sensor:
+        elif single_series:
+            inference_flag = 'iii\n'
             #Check if there are specific files to include in testing
             if dataset_file_name.startswith("output_"):
                 if len(individual_files) != 0:
@@ -408,6 +410,7 @@ while reading:
                         y_act = []
                         y_mod = []
                         print("Testing on", dataset_file_name, " [...in progress...]")
+                        time_inf_start = time.time_ns() // 1000000
                         for line in f:
                             # Split the line into values
                             values = line.strip().split()
@@ -416,6 +419,7 @@ while reading:
                             x_time.append(t)
                             t += 1
                             serialcom.write(v.encode())
+                            serialcom.write(inference_flag.encode())
                             time_init = time.time_ns() // 1000000
                             time_now = time_init
                             while (time_now - time_init) <= 20:
@@ -427,6 +431,11 @@ while reading:
                                 if "Output" in l:
                                     out = float(l[8:])
                                     y_mod.append(out)
+                        print('number of inferences: ', t)
+                        time_now = time.time_ns() // 1000000
+                        print('Current time:', (time_now - time_start) / 1000, '[s]    inferences done: ', counter)
+                        counter += 1
+                        print('time per inference: ', round(((time_now-time_inf_start)/1000)/t, 3))
                     #Write finish flag to Serial
                     finish_flag = 'fff'
                     serialcom.write(finish_flag.encode())
@@ -506,7 +515,7 @@ if make_report:
     # Generate the HTML report
     print('\nMaking HTML report file [...in progress...]')
     # Create an HTML page with captions for each plot
-    html_template = '<html><head><title>TFLite Micro test report {}</title></head><body><h1>TFLite Micro test report {}</h1><h3>Test time: {}</h3><h3>Model name: {}</h3><h3>Model type: {}</h3><h3>Model description: {}</h3><h3>Model data size: {} [Bytes]</h3><br><h2>Test results:</h2><h3>Accuracy on NO anomalies (0): {}</h3><h3>Accuracy on ANOMALIES (1): {}</h3><h3>Time per inference: {} [s]</h3><h3>Total test time: {} [s]</h3>{}</body></html>'
+    html_template = '<html><head><title>TF Lite Micro test report {}</title></head><body><h1>TF Lite Micro test report {}</h1><h3>Test time: {}</h3><h3>Model name: {}</h3><h3>Model type: {}</h3><h3>Model description: {}</h3><h3>Model data size: {} [Bytes]</h3><br><h2>Test results:</h2><h3>Accuracy on NO anomalies (0): {}</h3><h3>Accuracy on ANOMALIES (1): {}</h3><h3>Time per inference: {} [s]</h3><h3>Total test time: {} [s]</h3>{}</body></html>'
     figure_template3 = '<figure><div style="display: flex; flex-direction: row;"><img src="{}"><img src="{}"></div><figcaption>{}</figcaption></figure>'
     figure_template1 = '<figure><div style="display: flex; flex-direction: row;"><img src="{}"><img src="{}"></div></figure>'
     figure_template0 = '<figure><div style="display: flex; flex-direction: row;"><img src="{}"></div></figure>'

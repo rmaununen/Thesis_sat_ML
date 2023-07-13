@@ -128,7 +128,10 @@ void setup() {
   }
 
   // Get operation implementations.
-  static tflite::AllOpsResolver resolver;
+  static tflite::MicroMutableOpResolver<1> resolver; //MicroMutableOpResolver or   static tflite::AllOpsResolver resolver;
+  if (resolver.AddFullyConnected() != kTfLiteOk) {
+    return;
+  }
 
   // Build an interpreter to run the model with.
   static tflite::MicroInterpreter static_interpreter(model, resolver, tensor_arena, kTensorArenaSize); //20.02.23 removed "(... ,error_reporter)"
