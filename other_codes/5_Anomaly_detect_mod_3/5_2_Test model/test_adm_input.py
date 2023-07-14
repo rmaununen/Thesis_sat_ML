@@ -14,11 +14,11 @@ Time_dir1 = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/5_Anoma
 Model_dir1 = Training_dir1
 
 #REPORT PARAMETERS
-id = '3.11.0' #test ID that will be printed in the report name header
+id = '3.11.3' #test ID that will be printed in the report name header
 n_test_sets = 32
 
 #MODEL PARAMETERS
-model_name = f'adm_3_8  (Threshold 0.9. Value limits 1/0 applied. Normalization applied.)' #(WITH THRESHOLD OUTPUT CLASSIFICATION {threshold_out}) same as adm_13 but trained not to follow anomalies'
+model_name = f'adm_3_8  (Threshold 0.75. Value limits 1/0 applied. Normalization applied.)' #(WITH THRESHOLD OUTPUT CLASSIFICATION {threshold_out}) same as adm_13 but trained not to follow anomalies'
 tf_model_name = 'adm_3_8'  #The existing model
 tflite_model_name = tf_model_name  # Will be given .tflite suffix
 c_model_name = tf_model_name       # Will be given .h suffix
@@ -33,14 +33,14 @@ normal_max = 50
 
 
 #FUNCTIONS TO BE EXECUTED
-convert = False
+convert = True
 gradcam = False
-plot_tests = True
-make_report = True
+plot_tests = False
+make_report = False
 
 #PROCESSING ANOMALY STATUSES
 filter_thrshld = True
-threshold_out = 0.9
+threshold_out = 0.75
 limit_val = True
 
 #DATETIME PARAMETERS
@@ -51,7 +51,7 @@ date_time = '03.07.2023'#formatted_date_time #Change this if you want the time t
 
 
 #CONVERSION TO TFLITE
-rep_dataset = 'dataset_44_0'
+rep_dataset = 'dataset_44_0_x'
 nsamples = 60   # Number of samples to use as a representative dataset (<len(rep_dataset))
 n_decimals_x = 4 # max number of decimals in the input tensor values
 safety_factor = 1.6 # all input tensor values will be multiplied by this factor

@@ -84,6 +84,7 @@ f.close()
 for m in mod_dat:
     m += '\n'
     serialcom.write(m.encode())
+    break #TEST
     '''
     time_init = time.time_ns() // 1000000
     time_now = time_init
@@ -99,7 +100,7 @@ print('Model data has been sent\n')
 #Check for status reports from MSP
 time_init = time.time_ns() // 1000000
 time_now = time_init
-while (time_now - time_init) <= 1000: #[ms] Try to increase this value if there are problems with initialization
+while (time_now - time_init) <= 3000: #[ms] Try to increase this value if there are problems with initialization
     time_now = time.time_ns() // 1000000
     # Read line from serial (if there is anything to read)
     l = serialcom.readline().decode().rstrip()
@@ -152,19 +153,25 @@ while reading:
                     for line in f:
                         # Split the line into values
                         values = line.strip().split()
-
+                        #4 out #5 der #3 3 3 3
+                        x = [float(v) for v in values[8:]]
+                        x = x[:5] + x[15 + 7:25] + x[35 + 7:45] + x[55 + 7:65] + x[75 + 7:85]
+                        y = [float(v) for v in values[:4]]
+                        values = y + x
+                        if t == 0:
+                            print(values)
                         y_act_1.append(
                             float(values[0]))  # (denormalize_value(float(values[0]), normal_min, normal_max))
                         y_act_2.append(float(values[1]))
                         y_act_3.append(float(values[2]))
                         y_act_4.append(float(values[3]))
-                        sens_1.append(denormalize_value(float(values[12 + n_series]), normal_min,
+                        sens_1.append(denormalize_value(float(values[8 + n_series]), normal_min,
                                                         normal_max))  # subject to change
-                        sens_2.append(denormalize_value(float(values[12 + 2 * n_series]), normal_min,
+                        sens_2.append(denormalize_value(float(values[8 + 2 * n_series]), normal_min,
                                                         normal_max))  # subject to change
-                        sens_3.append(denormalize_value(float(values[12 + 3 * n_series]), normal_min,
+                        sens_3.append(denormalize_value(float(values[8 + 3 * n_series]), normal_min,
                                                         normal_max))  # subject to change
-                        sens_4.append(denormalize_value(float(values[12 + 4 * n_series]), normal_min,
+                        sens_4.append(denormalize_value(float(values[8 + 4 * n_series]), normal_min,
                                                         normal_max))  # subject to change
                         x_time_act.append(
                             round(denormalize_value(float(values[12]), t_normal_min, t_normal_max)))  # subject to change
@@ -193,7 +200,7 @@ while reading:
                         time_init = time.time_ns() // 1000000
                         time_now = time_init
                         while (
-                                time_now - time_init) <= 100:  # [ms] Try to increase this value if there are problems with inferences or outputs
+                                time_now - time_init) <= 120:  # [ms] Try to increase this value if there are problems with inferences or outputs
                             time_now = time.time_ns() // 1000000
                             # Read line from serial (if there is anything to read)
                             l = serialcom.readline().decode().rstrip()
@@ -225,6 +232,7 @@ while reading:
                 pred_lst2 = []
                 pred_lst3 = []
                 pred_lst4 = []
+                filter_thrshld = True
                 if filter_thrshld:
                     for p in y_mod_1:
                         if p < threshold_out:
@@ -282,113 +290,112 @@ while reading:
                         pred_lst3 = y_mod_3
                         pred_lst4 = y_mod_4
 
-                    # add up all model inference results for later acuracy analysis
-                    all_act += y_act_1 + y_act_2 + y_act_3 + y_act_4
-                    all_mod += pred_lst1 + pred_lst2 + pred_lst3 + pred_lst4
+                # add up all model inference results for later acuracy analysis
+                all_act += y_act_1 + y_act_2 + y_act_3 + y_act_4
+                all_mod += pred_lst1 + pred_lst2 + pred_lst3 + pred_lst4
+                if plot_tests:
+                    os.chdir(report_directory)
+                    #    +X     Model classification output vs actual label
+                    fig = plt.figure()
+                    ax = fig.add_subplot(111)
+                    plt.clf()
+                    plt.title(f'Actual +X vs model {tf_model_name}, {dataset_file_name}')
+                    plt.plot(x_time, y_act_1, 'black', linewidth=3, label='Actual anomaly label')
+                    plt.plot(x_time, pred_lst1, 'b', label='Model output')
+                    # for time:
+                    plt.xticks(x_time, [int(t) for t in x_time_act])
+                    plt.locator_params(axis='x', nbins=20)
+                    plt.legend()
+                    plt.xlabel('Time [min]')
+                    plt.ylabel('Anomaly probability [-]')
+                    plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
+                    plt.minorticks_on()
+                    plt.grid(b=True, which='minor', color='grey', linestyle='-', alpha=0.1)
+                    plot_name = f'{report_directory_name}/{dataset_file_name}_mod1.png'
+                    fig.savefig(plot_name)
+                    plt.clf()
 
-                    if plot_tests:
-                        os.chdir(report_directory)
-                        #    +X     Model classification output vs actual label
-                        fig = plt.figure()
-                        ax = fig.add_subplot(111)
-                        plt.clf()
-                        plt.title(f'Actual +X vs model {tf_model_name}, {dataset_file_name}')
-                        plt.plot(x_time, y_act_1, 'black', linewidth=3, label='Actual anomaly label')
-                        plt.plot(x_time, pred_lst1, 'b', label='Model output')
-                        # for time:
-                        plt.xticks(x_time, [int(t) for t in x_time_act])
-                        plt.locator_params(axis='x', nbins=20)
-                        plt.legend()
-                        plt.xlabel('Time [min]')
-                        plt.ylabel('Anomaly probability [-]')
-                        plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
-                        plt.minorticks_on()
-                        plt.grid(b=True, which='minor', color='grey', linestyle='-', alpha=0.1)
-                        plot_name = f'{report_directory_name}/{dataset_file_name}_mod1.png'
-                        fig.savefig(plot_name)
-                        plt.clf()
+                    #    -X     Model classification output vs actual label
+                    fig = plt.figure()
+                    ax = fig.add_subplot(111)
+                    plt.clf()
+                    plt.title(f'Actual -X vs model {tf_model_name}, {dataset_file_name}')
+                    plt.plot(x_time, y_act_2, 'black', linewidth=3, label='Actual anomaly label')
+                    plt.plot(x_time, pred_lst2, 'r', label='Model output')
+                    # for time:
+                    plt.xticks(x_time, [int(t) for t in x_time_act])
+                    plt.locator_params(axis='x', nbins=20)
+                    plt.legend()
+                    plt.xlabel('Time [min]')
+                    plt.ylabel('Anomaly probability [-]')
+                    plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
+                    plt.minorticks_on()
+                    plt.grid(b=True, which='minor', color='grey', linestyle='-', alpha=0.1)
+                    plot_name = f'{report_directory_name}/{dataset_file_name}_mod2.png'
+                    fig.savefig(plot_name)
+                    plt.clf()
 
-                        #    -X     Model classification output vs actual label
-                        fig = plt.figure()
-                        ax = fig.add_subplot(111)
-                        plt.clf()
-                        plt.title(f'Actual -X vs model {tf_model_name}, {dataset_file_name}')
-                        plt.plot(x_time, y_act_2, 'black', linewidth=3, label='Actual anomaly label')
-                        plt.plot(x_time, pred_lst2, 'r', label='Model output')
-                        # for time:
-                        plt.xticks(x_time, [int(t) for t in x_time_act])
-                        plt.locator_params(axis='x', nbins=20)
-                        plt.legend()
-                        plt.xlabel('Time [min]')
-                        plt.ylabel('Anomaly probability [-]')
-                        plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
-                        plt.minorticks_on()
-                        plt.grid(b=True, which='minor', color='grey', linestyle='-', alpha=0.1)
-                        plot_name = f'{report_directory_name}/{dataset_file_name}_mod2.png'
-                        fig.savefig(plot_name)
-                        plt.clf()
+                    #    +Y     Model classification output vs actual label
+                    fig = plt.figure()
+                    ax = fig.add_subplot(111)
+                    plt.clf()
+                    plt.title(f'Actual +Y vs model {tf_model_name}, {dataset_file_name}')
+                    plt.plot(x_time, y_act_3, 'black', linewidth=3, label='Actual anomaly label')
+                    plt.plot(x_time, pred_lst3, 'g', label='Model output')
+                    # for time:
+                    plt.xticks(x_time, [int(t) for t in x_time_act])
+                    plt.locator_params(axis='x', nbins=20)
+                    plt.legend()
+                    plt.xlabel('Time [min]')
+                    plt.ylabel('Anomaly probability [-]')
+                    plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
+                    plt.minorticks_on()
+                    plt.grid(b=True, which='minor', color='grey', linestyle='-', alpha=0.1)
+                    plot_name = f'{report_directory_name}/{dataset_file_name}_mod3.png'
+                    fig.savefig(plot_name)
+                    plt.clf()
 
-                        #    +Y     Model classification output vs actual label
-                        fig = plt.figure()
-                        ax = fig.add_subplot(111)
-                        plt.clf()
-                        plt.title(f'Actual +Y vs model {tf_model_name}, {dataset_file_name}')
-                        plt.plot(x_time, y_act_3, 'black', linewidth=3, label='Actual anomaly label')
-                        plt.plot(x_time, pred_lst3, 'g', label='Model output')
-                        # for time:
-                        plt.xticks(x_time, [int(t) for t in x_time_act])
-                        plt.locator_params(axis='x', nbins=20)
-                        plt.legend()
-                        plt.xlabel('Time [min]')
-                        plt.ylabel('Anomaly probability [-]')
-                        plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
-                        plt.minorticks_on()
-                        plt.grid(b=True, which='minor', color='grey', linestyle='-', alpha=0.1)
-                        plot_name = f'{report_directory_name}/{dataset_file_name}_mod3.png'
-                        fig.savefig(plot_name)
-                        plt.clf()
+                    #    -Y     Model classification output vs actual label
+                    fig = plt.figure()
+                    ax = fig.add_subplot(111)
+                    plt.clf()
+                    plt.title(f'Actual -Y vs model {tf_model_name}, {dataset_file_name}')
+                    plt.plot(x_time, y_act_4, 'black', linewidth=3, label='Actual anomaly label')
+                    plt.plot(x_time, pred_lst4, 'c', label='Model output')
+                    # for time:
+                    plt.xticks(x_time, [int(t) for t in x_time_act])
+                    plt.locator_params(axis='x', nbins=20)
+                    plt.legend()
+                    plt.xlabel('Time [min]')
+                    plt.ylabel('Anomaly probability [-]')
+                    plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
+                    plt.minorticks_on()
+                    plt.grid(b=True, which='minor', color='grey', linestyle='-', alpha=0.1)
+                    plot_name = f'{report_directory_name}/{dataset_file_name}_mod4.png'
+                    fig.savefig(plot_name)
+                    plt.clf()
 
-                        #    -Y     Model classification output vs actual label
-                        fig = plt.figure()
-                        ax = fig.add_subplot(111)
-                        plt.clf()
-                        plt.title(f'Actual -Y vs model {tf_model_name}, {dataset_file_name}')
-                        plt.plot(x_time, y_act_4, 'black', linewidth=3, label='Actual anomaly label')
-                        plt.plot(x_time, pred_lst4, 'c', label='Model output')
-                        # for time:
-                        plt.xticks(x_time, [int(t) for t in x_time_act])
-                        plt.locator_params(axis='x', nbins=20)
-                        plt.legend()
-                        plt.xlabel('Time [min]')
-                        plt.ylabel('Anomaly probability [-]')
-                        plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
-                        plt.minorticks_on()
-                        plt.grid(b=True, which='minor', color='grey', linestyle='-', alpha=0.1)
-                        plot_name = f'{report_directory_name}/{dataset_file_name}_mod4.png'
-                        fig.savefig(plot_name)
-                        plt.clf()
-
-                        # Telemetry from the three panel sensors
-                        fig = plt.figure()
-                        ax = fig.add_subplot(111)
-                        plt.clf()
-                        plt.title(f'Temperature sensors, {dataset_file_name}')
-                        plt.plot(x_time, sens_1, 'b', label='Panel 1 (+X)')
-                        plt.plot(x_time, sens_2, 'r', label='Panel 2 (-X)')
-                        plt.plot(x_time, sens_3, 'g', label='Panel 3 (+Y)')
-                        plt.plot(x_time, sens_4, 'c', label='Panel 4 (-Y)')
-                        # for time:
-                        plt.xticks(x_time, [int(t) for t in x_time_act])
-                        plt.locator_params(axis='x', nbins=20)
-                        plt.legend()
-                        plt.xlabel('Time [min]')
-                        plt.ylabel('Temperature [deg C]')
-                        plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
-                        plt.minorticks_on()
-                        plt.grid(b=True, which='minor', color='grey', linestyle='-', alpha=0.1)
-                        plot_name = f'{report_directory_name}/{dataset_file_name}_sens.png'
-                        fig.savefig(plot_name)
-                        plt.clf()
+                    # Telemetry from the three panel sensors
+                    fig = plt.figure()
+                    ax = fig.add_subplot(111)
+                    plt.clf()
+                    plt.title(f'Temperature sensors, {dataset_file_name}')
+                    plt.plot(x_time, sens_1, 'b', label='Panel 1 (+X)')
+                    plt.plot(x_time, sens_2, 'r', label='Panel 2 (-X)')
+                    plt.plot(x_time, sens_3, 'g', label='Panel 3 (+Y)')
+                    plt.plot(x_time, sens_4, 'c', label='Panel 4 (-Y)')
+                    # for time:
+                    plt.xticks(x_time, [int(t) for t in x_time_act])
+                    plt.locator_params(axis='x', nbins=20)
+                    plt.legend()
+                    plt.xlabel('Time [min]')
+                    plt.ylabel('Temperature [deg C]')
+                    plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
+                    plt.minorticks_on()
+                    plt.grid(b=True, which='minor', color='grey', linestyle='-', alpha=0.1)
+                    plot_name = f'{report_directory_name}/{dataset_file_name}_sens.png'
+                    fig.savefig(plot_name)
+                    plt.clf()
 
         #****************************************   Old code for ptm model   ******************************************
         elif single_series:
@@ -493,20 +500,44 @@ while reading:
                         fig.savefig(plot_name)
 
     #########################   CALCULATE ACCURACY   #########################
+
     count_1 = 0
     sum_1 = 0
     sum_2 = 0
+    TP = 0
+    TN = 0
+    FP = 0
+    FN = 0
     for a, b in zip(all_act, all_mod):
         if a == 1:
             count_1 += 1
             sum_1 += b
+            if b == 1:
+                TP += 1
+            else:
+                FN += 1
         else:
             sum_2 += (1 - b)
-    acc_1 = sum_1 / count_1
-    acc_2 = sum_2 / (len(all_act) - count_1)
+            if b == 0:
+                TN += 1
+            else:
+                FP += 1
+
+    acc_1 = 2.0001#sum_1 / count_1
+    acc_2 = 2.0001#sum_2 / (len(all_act) - count_1)
+
+    recall = TP / (TP + FN)
+    precision = TP / (TP + FP)
+    F1 = (2 * precision * recall) / (precision + recall)
+    FAR = FP / (TN + FP)
     print('\n****************************\n')
     print(f'{tf_model_name} accuracy on NO anomalies (0): ', round(acc_2, 4))
     print(f'{tf_model_name} accuracy on ANOMALIES (1): ', round(acc_1, 4))
+
+    print(f'\n{tf_model_name} recall: ', round(recall, 4))
+    print(f'{tf_model_name} precision: ', round(precision, 4))
+    print(f'{tf_model_name} F1: ', round(F1, 4))
+    print(f'{tf_model_name} FAR: ', round(FAR, 4))
 
     reading = False
 #########################   MAKE REPORT   #########################
@@ -515,7 +546,7 @@ if make_report:
     # Generate the HTML report
     print('\nMaking HTML report file [...in progress...]')
     # Create an HTML page with captions for each plot
-    html_template = '<html><head><title>TF Lite Micro test report {}</title></head><body><h1>TF Lite Micro test report {}</h1><h3>Test time: {}</h3><h3>Model name: {}</h3><h3>Model type: {}</h3><h3>Model description: {}</h3><h3>Model data size: {} [Bytes]</h3><br><h2>Test results:</h2><h3>Accuracy on NO anomalies (0): {}</h3><h3>Accuracy on ANOMALIES (1): {}</h3><h3>Time per inference: {} [s]</h3><h3>Total test time: {} [s]</h3>{}</body></html>'
+    html_template = '<html><head><title>TF Lite Micro test report {}</title></head><body><h1>TF Lite Micro test report {}</h1><h3>Test time: {}</h3><h3>Model name: {}</h3><h3>Model type: {}</h3><h3>Model description: {}</h3><h3>Model data size: {} [Bytes]</h3><br><h2>Test results:</h2><h3>Accuracy on NO anomalies (0): {}</h3><h3>Accuracy on ANOMALIES (1): {}</h3><h3>Time per inference: {} [s]</h3><h3>Total test time: {} [s]</h3><h3>recall: {}</h3><h3>precision: {}</h3><h3>F1 score: {}</h3><h3>False alarm rate: {}</h3>{}</body></html>'
     figure_template3 = '<figure><div style="display: flex; flex-direction: row;"><img src="{}"><img src="{}"></div><figcaption>{}</figcaption></figure>'
     figure_template1 = '<figure><div style="display: flex; flex-direction: row;"><img src="{}"><img src="{}"></div></figure>'
     figure_template0 = '<figure><div style="display: flex; flex-direction: row;"><img src="{}"></div></figure>'
@@ -553,7 +584,7 @@ if make_report:
     #t_per_inf = 0.126
     #end_time = 915.975
     html_content = html_template.format(id, id, date_time, model_name, model_type, model_desc, model_size,
-                                        round(acc_2, 4), round(acc_1, 4), t_per_inf, end_time,
+                                        round(acc_2, 4), round(acc_1, 4), t_per_inf, end_time, round(recall, 4), round(precision, 4), round(F1, 4), round(FAR, 4),
                                         figure_html)
     with open(f'{report_directory_name}/test_report_{id}.html', 'w') as f:
         f.write(html_content)

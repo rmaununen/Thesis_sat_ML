@@ -86,7 +86,8 @@ for test_file in os.listdir(Dataset_dir1):
     x_test_dat_2 = denormalise_list(x_test_dat_2, normal_min, normal_max, None)
     x_test_dat_3 = denormalise_list(x_test_dat_3, normal_min, normal_max, None)
     x_test_dat_4 = denormalise_list(x_test_dat_4, normal_min, normal_max, None)
-    predictions = model.predict(np.array(x_test_rows))
+    if not 'x' in test_file:
+        predictions = model.predict(np.array(x_test_rows))
     #predictions1 = predictions[:, 0] #CHANGED TEMPORARILY  #PREDICTION
     #print('1:       ', predictions0)
     #predictions1 = denormalise_array(predictions1, normal_min, normal_max, None)
@@ -354,10 +355,10 @@ print('\n****************************\n')
 print(f'{tf_model_name} accuracy on NO anomalies (0): ', round(acc_2, 4))
 print(f'{tf_model_name} accuracy on ANOMALIES (1): ', round(acc_1, 4))
 
-print(f'\n{tf_model_name} recall: ', recall)
-print(f'{tf_model_name} precision: ', precision)
-print(f'{tf_model_name} F1: ', F1)
-print(f'{tf_model_name} FAR: ', FAR)
+print(f'\n{tf_model_name} recall: ', round(recall, 4))
+print(f'{tf_model_name} precision: ', round(precision, 4))
+print(f'{tf_model_name} F1: ', round(F1, 4))
+print(f'{tf_model_name} FAR: ', round(FAR, 4))
 
 
 

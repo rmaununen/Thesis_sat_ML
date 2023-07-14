@@ -17,7 +17,7 @@ limitations under the License.
 #include <ti/drivers/UART.h>
 #include "ti_drivers_config.h"
 #include <TFLM/constants.h>
-//#include <TFLM/therm_model_data.h>
+#include <TFLM/therm_model_data.h>
 #include <ti/devices/msp432p4xx/inc/msp432p401r.h>
 #include <TFLM/main_functions.h>
 #include <TFLM/conversion_functions.h>
@@ -121,17 +121,18 @@ void setup() {
   tflite::InitializeTarget();
 
   // Map the model into a usable data structure (no copying or parsing, lightweight).
-  model = tflite::GetModel(model_data); //g_therm_model_data    uart_model_data
+  model = tflite::GetModel(g_therm_model_data); //g_therm_model_data    uart_model_data
   if (model->version() != TFLITE_SCHEMA_VERSION) {
     UART_write(uart, "E: Model version is not compatible\n", 35);
     return;
   }
 
   // Get operation implementations.
-  static tflite::MicroMutableOpResolver<1> resolver; //MicroMutableOpResolver or   static tflite::AllOpsResolver resolver;
-  if (resolver.AddFullyConnected() != kTfLiteOk) {
-    return;
-  }
+  //static tflite::MicroMutableOpResolver<1> resolver; //MicroMutableOpResolver or   static tflite::AllOpsResolver resolver;
+  //if (resolver.AddFullyConnected() != kTfLiteOk) {
+  //  return;
+  //}
+  static tflite::AllOpsResolver resolver;
 
   // Build an interpreter to run the model with.
   static tflite::MicroInterpreter static_interpreter(model, resolver, tensor_arena, kTensorArenaSize); //20.02.23 removed "(... ,error_reporter)"
