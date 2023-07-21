@@ -8,6 +8,7 @@ This is the input file for TFL Micro testing framework for MSP432.
 #REPORT PARAMETERS
 id = '1.1' #'2.9.1' #test ID that will be printed in the report name header
 report_directory = "/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/Test_TFL_on_MSP"
+report_directory_name = f'TFL_test_report_{id}'
 
 #TEST PARAMETERS
 n_test_sets = 32

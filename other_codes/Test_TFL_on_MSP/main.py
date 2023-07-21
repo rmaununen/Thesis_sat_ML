@@ -13,7 +13,6 @@ import numpy as np
 from main_input import *
 from normalize_functions import *
 
-report_directory_name = f'TFL_test_report_{id}'
 if not os.path.exists(report_directory_name):
     os.makedirs(report_directory_name)
 
@@ -85,16 +84,16 @@ for m in mod_dat:
     m += '\n'
     serialcom.write(m.encode())
     break #TEST
-    '''
-    time_init = time.time_ns() // 1000000
-    time_now = time_init
-        while (time_now - time_init) <= 50: #<- FOR DEBUGGING
-        time_now = time.time_ns() // 1000000
-        # Read line from serial (if there is anything to read)
-        l = serialcom.readline().decode().rstrip()
-        if len(l) > 0:
-            print(l)
-    '''
+'''
+time_init = time.time_ns() // 1000000
+time_now = time_init
+    while (time_now - time_init) <= 50: #<- FOR DEBUGGING
+    time_now = time.time_ns() // 1000000
+    # Read line from serial (if there is anything to read)
+    l = serialcom.readline().decode().rstrip()
+    if len(l) > 0:
+        print(l)
+'''
 print('Model data has been sent\n')
 
 #Check for status reports from MSP

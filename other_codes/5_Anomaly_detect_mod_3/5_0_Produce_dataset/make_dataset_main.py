@@ -11,12 +11,12 @@ Output_dir = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/4_Anom
 #main_panel = '+X'
 
 
-make_tel = True
+make_tel = False
 make_time = False
-make_sets = True
-produce = True
+make_sets = False
+produce = False
 balance = False
-test_anomaly_functions = False
+test_anomaly_functions = True
 
 single_panel = False
 overwrite_telemetries_with_a = False
@@ -1136,9 +1136,10 @@ if produce:
 
 if test_anomaly_functions:
     for telemetry_file_name in os.listdir(Telemetry_dir):
-        for i in range(5):
+        for i in range(1):
             if (telemetry_file_name == 'output_+Y_1187.txt'): # main_panel in telemetry_file_name and (telemetry_file_name == f'output_+X_163_a_{21+i}.txt'):
-                list1 = telemetry_to_str_list(telemetry_file_name, Telemetry_dir)
+                list1 = telemetry_to_str_list(telemetry_file_name, Telemetry_dir)[50:-35]
+                list2 = telemetry_to_str_list(telemetry_file_name, Telemetry_dir)[50+20:-15]
                 #list = str_to_float_list(list)
                 # list1 = make_const_sensor_anomaly(list, 30, len(list)-30, value=35)
                 #list = shift_temp(list, -1, 10)
@@ -1155,11 +1156,25 @@ if test_anomaly_functions:
                 list1 = remove_anomaly_labels(list1)
                 list1 = str_to_float_list(list1)
 
-                time = telemetry_to_str_list('clock_1187.txt', Time_dir)
+                #list2 = make_const_sensor_anomaly(list1, 30, 20, value=None)
+                #list2 = make_const_sensor_anomaly(list2, 90, len(list2)-90, value=-5)
+                #list2 = remove_anomaly_labels(list2)
+                #list2 = str_to_float_list(list2)
+
+                #list2 = shift_temp(list1, 1, 10)
+                #list2 = bump_temp(list1, 1, 20, 25, 240)
+                #list2 = remove_anomaly_labels(list2)
+                #list2 = str_to_float_list(list2)
+                #list2 = bump_temp(list2, -1, -30, 20, 180)
+                list2 = remove_anomaly_labels(list2)
+                list2 = str_to_float_list(list2)
+
+                time = telemetry_to_str_list('clock_1187.txt', Time_dir)[50:-35]
                 time = str_to_float_list(time)
 
-                plt.title(f'+Y panel temperature starting 04/02/2016 19:44')
-                plt.plot(range(len(time)), list1, label='Modified', c="b")
+                plt.title(f'Clock anomaly example')
+                plt.plot(range(len(time)), list1, label='Anomaly-free telemetry', c="b")
+                plt.plot(range(len(time)), list2, label='Telemetry with clock anomaly', c="r")
 
                 # Set the x-axis tick locations and labels
                 plt.xticks(range(len(time)), [int(t) for t in time])
@@ -1170,7 +1185,7 @@ if test_anomaly_functions:
                 plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
                 plt.minorticks_on()
                 plt.grid(b=True, which='minor', color='grey', linestyle='-', alpha=0.1)
-                #plt.legend()
+                plt.legend()
                 plt.show()
 
 

@@ -53,11 +53,22 @@ def bump_temp(list, dir, k, n, peak_magn): #INPUT LIST IS ANY TYPE
     return list_out #STRING
 
 
-def corrupt_clock(list, factor): #INPUT LIST IS ANY TYPE
+def corrupt_clock(clk_list, factor): #INPUT LIST IS ANY TYPE
     list_out = []
-    for l in list:
+    for l in clk_list:
         list_out.append(str(factor*float(l))+'a')
     return list_out #STRING
+
+'''
+Not used
+def shift_clock(clk_list, shift):
+    list_out = []
+    if shift > 0:
+        return 0
+    for l in clk_list:
+        list_out.append(str(factor * float(l)) + 'a')
+    return list_out  # STRING
+    '''
 
 
 
