@@ -13,6 +13,10 @@ import numpy as np
 from main_input import *
 from normalize_functions import *
 
+pathf = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/5_Anomaly_detect_mod_3/Clock_telemetry'
+str_time = telemetry_to_str_list('TEA_output_1187_n.txt', pathf)
+float_time = str_to_float_list(str_time)
+
 if not os.path.exists(report_directory_name):
     os.makedirs(report_directory_name)
 
@@ -149,12 +153,54 @@ while reading:
                     y_mod_3 = []
                     y_mod_4 = []
                     print("\nTesting on", dataset_file_name, " [...in progress...]")
+                    count = 0
                     for line in f:
                         # Split the line into values
                         values = line.strip().split()
+                        #values[12] = float_time[count]
+
+                        count+=1
+                        cur_time = round(
+                                denormalize_value(float(values[12]), t_normal_min, t_normal_max))
+                        x_time_act.append(cur_time)  # subject to change
+                        x_time.append(t)
+
                         #4 out #5 der #3 3 3 3
                         x = [float(v) for v in values[8:]]
-                        x = x[:5] + x[15 + 7:25] + x[35 + 7:45] + x[55 + 7:65] + x[75 + 7:85]
+                        #x = x[:5] + x[15 + 7:25] + x[35 + 7:45] + x[55 + 7:65] + x[75 + 7:85]
+                        timepder = x[:5]
+                        derin = [timepder[0], timepder[1], timepder[2], timepder[3]]
+                        timein = [timepder[4]]
+
+                        sen1 = x[15 + 7:25]
+                        sen2 = x[35 + 7:45]
+                        sen3 = x[55 + 7:65]
+                        sen4 = x[75 + 7:85]
+
+                        #Time error
+                        timein = [round(normalize_value(cur_time + 6.0, 0, 100), 3)]
+                        '''
+                        # Temperature noise
+                        noise_std = 2.0  # deg C
+                        normal_std = normalize_value(normal_min  + noise_std, normal_min, normal_max)
+                        sen1 = [round((float(data) + noise_value), 4) for data, noise_value in
+                                zip(sen1, np.random.normal(0, normal_std, 3))]
+                        sen2 = [round((float(data) + noise_value), 4) for data, noise_value in
+                                zip(sen2, np.random.normal(0, normal_std, 3))]
+                        sen3 = [round((float(data) + noise_value), 4) for data, noise_value in
+                                zip(sen3, np.random.normal(0, normal_std, 3))]
+                        sen4 = [round((float(data) + noise_value), 4) for data, noise_value in
+                                zip(sen4, np.random.normal(0, normal_std, 3))]
+
+                        der1 = get_current_sensor_slope(sen1)
+                        der2= get_current_sensor_slope(sen2)
+                        der3 = get_current_sensor_slope(sen3)
+                        der4 = get_current_sensor_slope(sen4)
+                        derin = [float(der1[0]), float(der2[0]), float(der3[0]), float(der4[0])]
+                        '''
+
+                        x = derin + timein + sen1 + sen2 + sen3 + sen4
+
                         y = [float(v) for v in values[:4]]
                         values = y + x
                         if t == 0:
@@ -172,9 +218,6 @@ while reading:
                                                         normal_max))  # subject to change
                         sens_4.append(denormalize_value(float(values[8 + 4 * n_series]), normal_min,
                                                         normal_max))  # subject to change
-                        x_time_act.append(
-                            round(denormalize_value(float(values[12]), t_normal_min, t_normal_max)))  # subject to change
-                        x_time.append(t)
                         t += 1
                         x_values = values[-n_points_inp:]
                         for v in x_values:
@@ -294,6 +337,7 @@ while reading:
                 all_mod += pred_lst1 + pred_lst2 + pred_lst3 + pred_lst4
                 if plot_tests:
                     os.chdir(report_directory)
+                    print(x_time_act)
                     #    +X     Model classification output vs actual label
                     fig = plt.figure()
                     ax = fig.add_subplot(111)
@@ -302,10 +346,11 @@ while reading:
                     plt.plot(x_time, y_act_1, 'black', linewidth=3, label='Actual anomaly label')
                     plt.plot(x_time, pred_lst1, 'b', label='Model output')
                     # for time:
-                    plt.xticks(x_time, [int(t) for t in x_time_act])
-                    plt.locator_params(axis='x', nbins=20)
+                    #plt.xticks(x_time, [int(t) for t in x_time_act])
+                    #plt.locator_params(axis='x', nbins=20)
                     plt.legend()
-                    plt.xlabel('Time [min]')
+                    #plt.xlabel('Time [min]')
+                    plt.xlabel('Data point number')
                     plt.ylabel('Anomaly probability [-]')
                     plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
                     plt.minorticks_on()
@@ -322,10 +367,11 @@ while reading:
                     plt.plot(x_time, y_act_2, 'black', linewidth=3, label='Actual anomaly label')
                     plt.plot(x_time, pred_lst2, 'r', label='Model output')
                     # for time:
-                    plt.xticks(x_time, [int(t) for t in x_time_act])
-                    plt.locator_params(axis='x', nbins=20)
+                    #plt.xticks(x_time, [int(t) for t in x_time_act])
+                    #plt.locator_params(axis='x', nbins=20)
                     plt.legend()
-                    plt.xlabel('Time [min]')
+                    #plt.xlabel('Time [min]')
+                    plt.xlabel('Data point number')
                     plt.ylabel('Anomaly probability [-]')
                     plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
                     plt.minorticks_on()
@@ -342,10 +388,11 @@ while reading:
                     plt.plot(x_time, y_act_3, 'black', linewidth=3, label='Actual anomaly label')
                     plt.plot(x_time, pred_lst3, 'g', label='Model output')
                     # for time:
-                    plt.xticks(x_time, [int(t) for t in x_time_act])
-                    plt.locator_params(axis='x', nbins=20)
+                    #plt.xticks(x_time, [int(t) for t in x_time_act])
+                    #plt.locator_params(axis='x', nbins=20)
                     plt.legend()
-                    plt.xlabel('Time [min]')
+                    #plt.xlabel('Time [min]')
+                    plt.xlabel('Data point number')
                     plt.ylabel('Anomaly probability [-]')
                     plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
                     plt.minorticks_on()
@@ -362,10 +409,11 @@ while reading:
                     plt.plot(x_time, y_act_4, 'black', linewidth=3, label='Actual anomaly label')
                     plt.plot(x_time, pred_lst4, 'c', label='Model output')
                     # for time:
-                    plt.xticks(x_time, [int(t) for t in x_time_act])
-                    plt.locator_params(axis='x', nbins=20)
+                    #plt.xticks(x_time, [int(t) for t in x_time_act])
+                    #plt.locator_params(axis='x', nbins=20)
                     plt.legend()
-                    plt.xlabel('Time [min]')
+                    #plt.xlabel('Time [min]')
+                    plt.xlabel('Data point number')
                     plt.ylabel('Anomaly probability [-]')
                     plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
                     plt.minorticks_on()
@@ -384,10 +432,11 @@ while reading:
                     plt.plot(x_time, sens_3, 'g', label='Panel 3 (+Y)')
                     plt.plot(x_time, sens_4, 'c', label='Panel 4 (-Y)')
                     # for time:
-                    plt.xticks(x_time, [int(t) for t in x_time_act])
-                    plt.locator_params(axis='x', nbins=20)
+                    #plt.xticks(x_time, [int(t) for t in x_time_act])
+                    #plt.locator_params(axis='x', nbins=20)
                     plt.legend()
-                    plt.xlabel('Time [min]')
+                    #plt.xlabel('Time [min]')
+                    plt.xlabel('Data point number')
                     plt.ylabel('Temperature [deg C]')
                     plt.grid(b=True, which='major', color='grey', linestyle='-', alpha=0.3)
                     plt.minorticks_on()

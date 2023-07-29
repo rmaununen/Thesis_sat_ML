@@ -62,6 +62,10 @@ def denormalize_value (in_value, normal_min, normal_max):
     denormal_v = round((in_value * (normal_max - normal_min)) + normal_min, 2)
     return denormal_v
 
+def normalize_value (in_value, normal_min, normal_max):
+    normal_v = round((float(in_value) - normal_min) / (normal_max - normal_min), 4)
+    return normal_v
+
 def telemetry_to_str_list(file_name, directory): #INPUT IS TELEMETRY FILE (SINGLE COLUMN)
     current_working_directory = os.getcwd()
     os.chdir(directory)
@@ -76,3 +80,9 @@ def telemetry_to_str_list(file_name, directory): #INPUT IS TELEMETRY FILE (SINGL
 def str_to_float_list(list):
     out_list = [float(l) for l in list]
     return out_list
+
+def get_current_sensor_slope(list):
+    slope_inp = [float(list[-3]), float(list[-2]), float(list[-1])]
+    der = np.gradient(slope_inp, 0.3)[-1]
+    slope_val = round(min(1.0, abs(der)), 4)
+    return [str(slope_val)]

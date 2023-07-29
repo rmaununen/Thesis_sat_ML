@@ -27,6 +27,9 @@ def normalize_in_file(Dataset_file, Normalized_dataset, already_normalised_indx,
                 output_values = []
     print("Output file has been filled with normalized values")
 
+#pathf = '/Users/rmc0mputer/PycharmProjects/Thesis_sat_ML/other_codes/5_Anomaly_detect_mod_3/Clock_telemetry'
+#normalize_in_file(pathf+'/TEA_output_1187.txt', pathf+'/TEA_output_1187_n.txt', None, 0, 100)
+
 def normalize_list (in_list, normal_min, normal_max, already_normalised_indx):
     out_list = []
     for i, v in enumerate(in_list):
