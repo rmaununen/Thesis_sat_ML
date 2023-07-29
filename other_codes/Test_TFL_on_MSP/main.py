@@ -165,7 +165,7 @@ while reading:
                         x_time_act.append(cur_time)  # subject to change
                         x_time.append(t)
 
-                        #4 out #5 der #3 3 3 3
+                        #4 out #5 der+time #3 3 3 3
                         x = [float(v) for v in values[8:]]
                         #x = x[:5] + x[15 + 7:25] + x[35 + 7:45] + x[55 + 7:65] + x[75 + 7:85]
                         timepder = x[:5]
@@ -177,8 +177,11 @@ while reading:
                         sen3 = x[55 + 7:65]
                         sen4 = x[75 + 7:85]
 
+                        '''
                         #Time error
                         timein = [round(normalize_value(cur_time + 6.0, 0, 100), 3)]
+                        '''
+
                         '''
                         # Temperature noise
                         noise_std = 2.0  # deg C
